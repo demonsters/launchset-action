@@ -1,0 +1,9 @@
+Copyright (c) demonsters. All rights reserved.
+
+This repository contains the compiled launchset GitHub Action. It is proprietary software of
+demonsters, provided only for use in GitHub Actions workflows. No other right is granted: you
+may not copy, modify, redistribute or sublicense it, in whole or in part, without written
+permission from demonsters.
+
+The bundle includes third-party open source components under their own licenses. Their notices
+are in dist/index.js.LEGAL.txt.

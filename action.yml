@@ -1,0 +1,148 @@
+name: Launchset
+description: >-
+  Changesets-style releases for lock-step monorepos. One version drives many targets
+  (Docker, Android, iOS, web). Decides what to release, stamps version numbers into files and
+  records results as git tags. It does not build anything: your own workflow steps do that.
+author: demonsters
+
+branding:
+  icon: package
+  color: blue
+
+inputs:
+  command:
+    description: >-
+      What to run. One of: check (PR check and sticky comment), release (decide the release mode:
+      publish, ship, release-pr or none), stamp (write version and build number into a target's
+      files), verify (store, registry or npm check before uploading), mark (record that a target
+      shipped), finalize (create the release tag and GitHub Release when every auto target has
+      shipped), preview-plan (plan a preview or prerelease build), preview-comment (sticky PR
+      comment and prerelease GitHub Release), add (write a changeset from a workflow).
+    required: true
+  token:
+    description: >-
+      GitHub token. For check, the default (github.token) is enough: it only reads and comments.
+      For release, mark, finalize, preview-plan and preview-comment pass a GitHub App
+      installation token (actions/create-github-app-token), because events caused by
+      GITHUB_TOKEN do not trigger other workflows.
+    required: false
+    default: ${{ github.token }}
+  target:
+    description: >-
+      Target name. Required for stamp, verify and mark. With release: the manual target to ship
+      (shipping it for an already released version). With preview-plan: an optional comma-separated list of targets that
+      overrides the configured preview targets (used by workflow_dispatch).
+    required: false
+    default: ""
+  bump:
+    description: "With add: the bump type of the new changeset (major, minor, patch or none)."
+    required: false
+    default: ""
+  message:
+    description: "With add: the changeset summary (the changelog entry)."
+    required: false
+    default: ""
+  version:
+    description: >-
+      With release and target: the already released version to ship (default: the latest release
+      on the branch the workflow was started from).
+    required: false
+    default: ""
+  plan:
+    description: >-
+      The plan JSON from the release or preview-plan job (its plan output). stamp, verify, mark,
+      finalize and preview-comment read it and never recompute the version or build number.
+    required: false
+    default: ""
+  working-directory:
+    description: Directory of the repository root to run in (where launchset.config.* lives).
+    required: false
+    default: "."
+
+outputs:
+  mode:
+    description: >-
+      Set by release. publish (build and ship the release), ship (build one manual target),
+      release-pr (the release PR was created or updated) or none (nothing to do).
+  matrix:
+    description: >-
+      Set by release and preview-plan. JSON array of target names to build, for
+      fromJSON() in a build matrix. Manual targets are only in it in ship mode.
+  plan:
+    description: >-
+      Set by release and preview-plan. The plan as JSON (version, build number, channel, release
+      sha and per-target data). Pass it to the later commands as the plan input.
+  version:
+    description: >-
+      Set by release, preview-plan, stamp and verify. The version of this run: the release
+      version, the preview version or the prerelease version.
+  build-number:
+    description: >-
+      Set by release, preview-plan and stamp. The build number of this run. Empty with the eas
+      strategy.
+  channel:
+    description: >-
+      Set by release, preview-plan and stamp. release, prerelease or preview. Use it to pick the
+      store track, TestFlight group or npm tag.
+  release-sha:
+    description: >-
+      Set by release and preview-plan. The commit every build job must check out (the release
+      commit, or the commit that was built for a preview).
+  already-published:
+    description: >-
+      Set by verify. "true" when this exact version and build number is already in the store,
+      registry or npm. The workflow skips the build and upload steps and goes straight to mark.
+  docker-tags:
+    description: >-
+      Set by stamp for docker targets. Full image references (image:tag), one per line. Pass it
+      to docker/build-push-action as tags.
+  docker-labels:
+    description: >-
+      Set by stamp for docker targets. OCI labels (org.opencontainers.image.version, .revision,
+      .created), one key=value per line. Pass it to docker/build-push-action as labels.
+  docker-refs-json:
+    description: >-
+      Set by stamp for docker targets. The same references as docker-tags, as a JSON array of
+      strings, for steps that need a structured list (for example scanners or deploy jobs).
+  dist-tag:
+    description: >-
+      Set by release, preview-plan and stamp. Suggested npm dist-tag: latest for base-branch
+      releases, release-<major>.<minor> on maintenance branches, <preid> for prereleases and
+      pr-<n> or <branchSlug> for previews.
+  pr-number:
+    description: >-
+      Set by check, and by preview-plan on pull_request runs. The number of the pull request, or
+      the release PR number in release-pr mode.
+  marketing-version:
+    description: >-
+      Set by stamp. The version written into the target's marketing-version fields. It is
+      the plain X.Y.Z base version for iOS targets (Apple does not accept prerelease suffixes)
+      and the same as version for every other target.
+  tag:
+    description: >-
+      Set by release and preview-plan. The git tag of this version: the release tag in publish
+      and ship mode, or the reserved prerelease tag on prerelease branches. Empty for other
+      previews.
+  prerelease:
+    description: >-
+      Set by release, preview-plan and stamp. "true" when the channel is prerelease, otherwise
+      "false". A convenient condition for steps that publish only prereleases.
+  path:
+    description: >-
+      Set by add. The path of the new changeset file, relative to the repository root (for
+      example .launchset/brave-lions-sing.md). Use it to commit the file in a workflow.
+  skipped:
+    description: >-
+      Set by preview-plan. A short code (for example no-label or fork) when no preview is
+      planned for this run; empty otherwise. When it is set, matrix is [] and plan is empty.
+  skip-reason:
+    description: Set by preview-plan. The sentence that says why the preview was skipped.
+  comment-url:
+    description: Set by preview-comment on pull request previews. The URL of the sticky comment.
+  release-url:
+    description: >-
+      Set by preview-comment on prerelease branches. The URL of the GitHub pre-release.
+
+runs:
+  using: node24
+  main: dist/index.js
