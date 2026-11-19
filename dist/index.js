@@ -90965,17 +90965,27 @@ function normalizeServerUrl(serverUrl) {
 function basicAuthHeader(token) {
   return `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
 }
-function authConfigEnv(token, serverUrl, baseEnv = process.env) {
-  const key = `http.${normalizeServerUrl(serverUrl)}.extraheader`;
+function configEnv(entries, baseEnv = process.env) {
   const existing = Number.parseInt(baseEnv.GIT_CONFIG_COUNT ?? "0", 10);
   const start = Number.isInteger(existing) && existing > 0 ? existing : 0;
-  return {
-    GIT_CONFIG_COUNT: String(start + 2),
-    [`GIT_CONFIG_KEY_${start}`]: key,
-    [`GIT_CONFIG_VALUE_${start}`]: "",
-    [`GIT_CONFIG_KEY_${start + 1}`]: key,
-    [`GIT_CONFIG_VALUE_${start + 1}`]: basicAuthHeader(token)
-  };
+  const env = { GIT_CONFIG_COUNT: String(start + entries.length) };
+  entries.forEach(([key, value2], i) => {
+    env[`GIT_CONFIG_KEY_${start + i}`] = key;
+    env[`GIT_CONFIG_VALUE_${start + i}`] = value2;
+  });
+  return env;
+}
+var NO_HOOKS = process.platform === "win32" ? "NUL" : "/dev/null";
+function authConfigEnv(token, serverUrl, baseEnv = process.env, owner) {
+  const scope = owner ? `${encodeURIComponent(owner)}/` : "";
+  const key = `http.${normalizeServerUrl(serverUrl)}${scope}.extraheader`;
+  return configEnv(
+    [
+      [key, ""],
+      [key, basicAuthHeader(token)]
+    ],
+    baseEnv
+  );
 }
 function topPathspec(path) {
   return `:(top,literal)${path}`;
@@ -91097,11 +91107,12 @@ var Git = class {
   }
   /** Run git and return everything; throws only when git can't be started. */
   async exec(args, options = {}) {
-    const result = await this.#spawn(args, options);
+    const owner = options.auth && this.#token ? (await this.repoFromRemote())?.split("/")[0] : void 0;
+    const result = await this.#spawn(args, options, owner);
     return { ...result, stdout: result.stdout.toString("utf8") };
   }
   /** Run git; stdout as bytes. Throws only when git can't be started. */
-  #spawn(args, options) {
+  #spawn(args, options, owner) {
     const env = {
       ...process.env,
       GIT_TERMINAL_PROMPT: "0",
@@ -91110,8 +91121,9 @@ var Git = class {
       LANGUAGE: "C",
       ...options.env
     };
+    Object.assign(env, configEnv([["core.hooksPath", NO_HOOKS]], env));
     if (options.auth && this.#token)
-      Object.assign(env, authConfigEnv(this.#token, this.serverUrl, env));
+      Object.assign(env, authConfigEnv(this.#token, this.serverUrl, env, owner));
     const command = this.mask(`git ${args.join(" ")}`);
     return new Promise((resolve9, reject) => {
       const child = execFile(
@@ -91469,7 +91481,7 @@ var Git = class {
     assertRefName("tag", name);
     const ref = `refs/tags/${name}`;
     const args = ["push", "--porcelain", this.remote, `${ref}:${ref}`];
-    const result = await this.exec(args, { auth: true });
+    const result = await this.exec(args, { auth: true, env: { GIT_LFS_SKIP_PUSH: "1" } });
     const status2 = this.#pushStatus(result.stdout, ref);
     if (result.code === 0) return status2 ?? "created";
     const pushError = this.error(args, result);
