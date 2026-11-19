@@ -1,3 +1,5 @@
+<img src="https://demonsters.github.io/launchset/logo.svg" alt="" width="80" align="right">
+
 # launchset action
 
 Changesets-style releases for lock-step monorepos: one version drives many targets (Docker, Android, iOS, web). The action decides what to release, writes version and build numbers into your files and records what shipped as git tags. It does not build anything: your own workflow steps do that.

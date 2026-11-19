@@ -99748,44 +99748,6 @@ function packageRequest(registry2, name) {
     ...authorization ? { basicAuth: authorization } : {}
   };
 }
-async function npmOidcToken(registry2, name, ctx) {
-  const requestUrl = ctx.env.ACTIONS_ID_TOKEN_REQUEST_URL?.trim();
-  const requestToken = ctx.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN?.trim();
-  if (!requestUrl || !requestToken) return void 0;
-  const audience = `npm:${new URL(registry2).hostname}`;
-  const idUrl = `${requestUrl}${requestUrl.includes("?") ? "&" : "?"}audience=${encodeURIComponent(audience)}`;
-  const idResponse = await send(ctx, "GitHub Actions OIDC", idUrl, {
-    headers: { authorization: `Bearer ${requestToken}`, accept: "application/json" }
-  });
-  if (!idResponse.ok) {
-    throw new VerifyError(
-      `GitHub Actions OIDC: requesting an id token failed with HTTP ${idResponse.status}${paren(await errorDetail(idResponse))}. Give the job \`permissions: id-token: write\`.`
-    );
-  }
-  const { value: value2 } = await readJson(idResponse, "GitHub Actions OIDC", idUrl);
-  if (!value2) throw new VerifyError("GitHub Actions OIDC: the id token response has no value.");
-  const escaped = name.startsWith("@") ? name.replace("/", "%2f") : encodeURIComponent(name);
-  const base = registry2.endsWith("/") ? registry2 : `${registry2}/`;
-  const exchangeUrl = `${base}-/npm/v1/oidc/token/exchange/package/${escaped}`;
-  const exchange = await send(ctx, API, exchangeUrl, {
-    method: "POST",
-    headers: { authorization: `Bearer ${value2}`, accept: "application/json" }
-  });
-  if (exchange.status === 404 || exchange.status === 400 || exchange.status === 401) {
-    return {
-      unavailable: `npm has no trusted publisher for ${name} that matches this workflow (HTTP ${exchange.status} from the OIDC exchange)`
-    };
-  }
-  if (!exchange.ok) {
-    throw new VerifyError(
-      `${API}: the trusted-publishing token exchange (POST ${redactUrls(exchangeUrl)}) failed with HTTP ${exchange.status}${paren(await errorDetail(exchange))}.`
-    );
-  }
-  const { token } = await readJson(exchange, API, exchangeUrl);
-  if (!token)
-    throw new VerifyError(`${API}: the trusted-publishing token exchange returned no token.`);
-  return { token };
-}
 async function verifyNpm(check3, ctx) {
   const packageFile = check3.packageFile ?? "package.json";
   const info2 = await readPackageInfo(packageFile, ctx);
@@ -99795,31 +99757,21 @@ async function verifyNpm(check3, ctx) {
   const headers = {
     accept: "application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*"
   };
-  let oidcNote = "";
-  let viaOidc = false;
   if (tokenEnv) headers.authorization = `Bearer ${ctx.env[tokenEnv]?.trim()}`;
   else if (urlAuth) headers.authorization = urlAuth;
-  else {
-    const oidc = await npmOidcToken(info2.registry, info2.name, ctx);
-    if (oidc && "token" in oidc) {
-      headers.authorization = `Bearer ${oidc.token}`;
-      viaOidc = true;
-    } else if (oidc) {
-      oidcNote = `; ${oidc.unavailable}`;
-    }
-  }
+  const inOidcJob = Boolean(ctx.env.ACTIONS_ID_TOKEN_REQUEST_URL?.trim());
   const ref = `${info2.name}@${check3.version}`;
   const response = await send(ctx, API, url2, { headers });
   if (response.status === 404) {
-    const note = tokenEnv || urlAuth || viaOidc ? "" : ` (no ${NPM_TOKEN_ENV.join(" or ")} was set and no trusted-publishing token${oidcNote}; a private package also answers 404 without a token)`;
+    const note = tokenEnv || urlAuth ? "" : ` (no ${NPM_TOKEN_ENV.join(" or ")} was set; a private package also answers 404 without a token${inOidcJob ? ", and npm trusted publishing can't read packages: give verify a read-only token" : ""})`;
     return {
       alreadyPublished: false,
       message: `${info2.name} isn't on ${registry2} yet (404 from ${url2}), so ${ref} isn't published${note}`
     };
   }
   if (!response.ok) {
-    const auth2 = tokenEnv ? `with the token from ${tokenEnv}` : urlAuth ? "with the credentials from the registry URL" : viaOidc ? "with a trusted-publishing (OIDC) token" : "without a token";
-    const hint = response.status === 401 || response.status === 403 ? ` Configure npm trusted publishing for ${info2.name} and give the job \`id-token: write\`, or set ${NPM_TOKEN_ENV.join(" or ")} to a token that can read it${tokenEnv ? ` (the one in ${tokenEnv} was refused)` : ""}.` : " The registry may be unavailable; try again later.";
+    const auth2 = tokenEnv ? `with the token from ${tokenEnv}` : urlAuth ? "with the credentials from the registry URL" : "without a token";
+    const hint = response.status === 401 || response.status === 403 ? ` Set ${NPM_TOKEN_ENV.join(" or ")} to a read-only token that can read ${info2.name}${tokenEnv ? ` (the one in ${tokenEnv} was refused)` : ""}. npm trusted publishing doesn't help here: its tokens can only publish.` : " The registry may be unavailable; try again later.";
     throw new VerifyError(
       `${API}: checking ${ref} (GET ${url2}, registry from ${info2.registrySource}) failed with HTTP ${response.status}${paren(await errorDetail(response))} ${auth2}.${hint}`
     );
