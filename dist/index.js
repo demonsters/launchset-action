@@ -96959,13 +96959,13 @@ function renderCheckComment(result, input2, addHelp) {
   const next = result.bump !== null && result.nextVersion !== null ? `The next release will be **${result.nextVersion}** (${result.bump}).` : result.bump === null ? "Nothing pending releases anything yet." : "";
   if (result.reason === "release-pr") {
     blocks.push(
-      `### launchset: release ${PR}`,
+      `### \u{1F680} launchset: release ${PR}`,
       `This is the launchset release ${PR}. Merging it releases every auto target.`
     );
   } else if (result.prChangesets.length > 0) {
     const highest = releaseBump(result.prChangesets);
     blocks.push(
-      `### launchset: ${plural2(result.prChangesets.length, "changeset")} found`,
+      `### \u{1F680} launchset: ${plural2(result.prChangesets.length, "changeset")} found`,
       `This ${PR}'s bump: **${highest ?? "none"}**. ${next}`.trim(),
       result.prChangesets.map(
         (c) => c.bump === "none" ? `- \`none\`: no release (${code(c.path)})` : `- \`${c.bump}\`: ${firstLine(c.summary)} (${code(c.path)})`
@@ -96973,12 +96973,12 @@ function renderCheckComment(result, input2, addHelp) {
     );
   } else if (result.reason === "bot") {
     blocks.push(
-      `### launchset: bot ${PR}`,
+      `### \u{1F680} launchset: bot ${PR}`,
       `No changeset needed: ${PR}s from ${code(input2.pr.author)} get a generated patch entry under Dependencies in the next release.`
     );
   } else {
     blocks.push(
-      "### launchset: no changeset",
+      "### \u{1F680} launchset: no changeset",
       `This ${PR} has no changeset, so the check fails.`,
       addHelp
     );
@@ -100420,7 +100420,7 @@ function renderPreviewComment(input2) {
   const { plan } = input2;
   const failed = plan.matrix.filter((n) => input2.results[n]?.status === "failure");
   const blocks = [
-    `### launchset preview: ${code(plan.version)}`,
+    `### \u{1F680} launchset preview: ${code(plan.version)}`,
     `${plan.channel === "prerelease" ? "Prerelease" : "Preview"} of ${plan.prNumber !== void 0 ? `this ${forgeWords(input2.host).prName}` : code(plan.branch)}${failed.length > 0 ? `: ${joinWords(failed.map(code))} failed` : ""}.`,
     resultsTable(input2),
     dockerList(plan),
