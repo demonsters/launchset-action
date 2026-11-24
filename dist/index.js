@@ -69501,8 +69501,107 @@ init_errors();
 // src/core/build-number.ts
 init_errors();
 
-// src/core/forge-hints.ts
+// src/core/hosts.ts
+var FORGE_HOSTS = ["github", "gitlab"];
+var DEFAULT_HOST = "github";
 var GITHUB = {
+  host: "github",
+  name: "GitHub",
+  defaultServerUrl: "https://github.com",
+  ci: "actions",
+  prSymbol: "#",
+  prName: "PR",
+  prRef: (n) => `refs/pull/${n}/head`,
+  prPath: (n) => `pull/${n}`,
+  releaseName: "GitHub Release",
+  prereleaseName: "GitHub pre-release",
+  releaseOfTag: "Release",
+  releaseNoun: "Release",
+  prereleaseFlag: true,
+  latestFlag: true,
+  lowercaseAlerts: false,
+  nestedRepositories: false,
+  selfManagedRemotes: false,
+  gitTokenUser: "x-access-token",
+  noTokenError: "no-github-token"
+};
+var GITLAB = {
+  host: "gitlab",
+  name: "GitLab",
+  defaultServerUrl: "https://gitlab.com",
+  ci: "gitlab-ci",
+  remoteMatches: (hostname3) => hostname3.includes("gitlab"),
+  prSymbol: "!",
+  prName: "MR",
+  prRef: (n) => `refs/merge-requests/${n}/head`,
+  prPath: (n) => `-/merge_requests/${n}`,
+  releaseName: "GitLab release",
+  prereleaseName: "GitLab release",
+  releaseOfTag: "GitLab release",
+  releaseNoun: "release",
+  prereleaseFlag: false,
+  latestFlag: false,
+  lowercaseAlerts: true,
+  nestedRepositories: true,
+  selfManagedRemotes: true,
+  gitTokenUser: "oauth2",
+  skipCiPushOption: "ci.skip",
+  noTokenError: "no-gitlab-token"
+};
+var HOSTS = { github: GITHUB, gitlab: GITLAB };
+var ACTIONS = {
+  ci: "actions",
+  name: "GitHub Actions",
+  detect: { variable: "GITHUB_ACTIONS", value: "true" },
+  hosts: ["github"],
+  runPath: (id) => `actions/runs/${id}`,
+  labelEvents: true,
+  fallbackListsJobs: true,
+  ciFilesByDefault: false
+};
+var GITLAB_CI = {
+  ci: "gitlab-ci",
+  name: "GitLab CI",
+  detect: { variable: "GITLAB_CI", value: "true" },
+  hosts: ["gitlab"],
+  runPath: (id) => `-/pipelines/${id}`,
+  labelEvents: false,
+  fallbackListsJobs: false,
+  ciFilesByDefault: true,
+  logSection: (id, title, content, now) => {
+    const time3 = Math.floor(now.getTime() / 1e3);
+    return `\x1B[0Ksection_start:${time3}:${id}[collapsed=true]\r\x1B[0K${title}
+${content}\x1B[0Ksection_end:${time3}:${id}\r\x1B[0K
+`;
+  }
+};
+var CI_SYSTEMS = {
+  actions: ACTIONS,
+  "gitlab-ci": GITLAB_CI
+};
+var CI_DETECTION_ORDER = ["gitlab-ci", "actions"];
+function ciFromEnv(env) {
+  return CI_DETECTION_ORDER.find((ci) => {
+    const { variable, value: value2 } = CI_SYSTEMS[ci].detect;
+    return env[variable] === value2;
+  });
+}
+function ciSystemFor(host, env) {
+  const detected = ciFromEnv(env);
+  return detected && CI_SYSTEMS[detected].hosts.includes(host) ? detected : hostProfile(host).ci;
+}
+function ciProfile(ci) {
+  return CI_SYSTEMS[ci];
+}
+function hostProfile(host = DEFAULT_HOST) {
+  return HOSTS[host];
+}
+function isForgeHost(value2) {
+  return FORGE_HOSTS.includes(value2);
+}
+
+// src/core/forge-hints.ts
+var GITHUB2 = {
   tokenNeeded: "needs a GitHub token and the repository.",
   tokenHint: (hasRepository) => hasRepository ? "Pass --token or set GITHUB_TOKEN (in workflows: the GitHub App token)." : "Pass --token and --repo owner/repo, or set GITHUB_TOKEN and GITHUB_REPOSITORY.",
   prHeadMissing: "Check out with fetch-depth: 0 (actions/checkout) so the PR head is available.",
@@ -69528,10 +69627,13 @@ var GITHUB = {
   runName: "workflow run",
   previewEvents: "The preview workflow runs on pull_request, push and workflow_dispatch events.",
   previewPrIncomplete: "the pull_request event payload has no pull_request number, head.ref or head.sha",
-  previewNoBranch: "Check out a branch (not a detached HEAD), or run this in GitHub Actions."
+  previewNoBranch: "Check out a branch (not a detached HEAD), or run this in GitHub Actions.",
+  shipTarget: (target, version3) => `a release workflow run with target ${code(target)} and version ${code(version3)}`,
+  shipOnDemand: "a release workflow run with the `target` input",
+  previewAddLabel: "add it to build a preview."
 };
 var GITLAB_TOKEN = "LAUNCHSET_TOKEN: a project or group access token with the api and write_repository scopes, role Maintainer";
-var GITLAB = {
+var GITLAB2 = {
   tokenNeeded: `needs a GitLab token (${GITLAB_TOKEN}) and the project.`,
   tokenHint: (hasRepository) => hasRepository ? "Pass --token or set LAUNCHSET_TOKEN (a CI/CD variable, masked; CI_JOB_TOKEN can only read)." : "Pass --token and --repo group/project, or set LAUNCHSET_TOKEN and CI_PROJECT_PATH.",
   prHeadMissing: 'Clone the full history (set GIT_DEPTH: "0" on the job) so the MR head is available.',
@@ -69554,10 +69656,14 @@ var GITLAB = {
   runName: "pipeline",
   previewEvents: "The preview job runs in merge request, branch and manual (web, api) pipelines.",
   previewPrIncomplete: "the merge request pipeline has no CI_MERGE_REQUEST_IID, CI_MERGE_REQUEST_SOURCE_BRANCH_NAME or commit sha",
-  previewNoBranch: "Check out a branch (not a detached HEAD), or run this in GitLab CI."
+  previewNoBranch: "Check out a branch (not a detached HEAD), or run this in GitLab CI.",
+  shipTarget: (target, version3) => `a release pipeline run with ${code(`LAUNCHSET_TARGET=${target}`)} and ${code(`LAUNCHSET_RELEASE_VERSION=${version3}`)}`,
+  shipOnDemand: "a release pipeline run with the `LAUNCHSET_TARGET` variable",
+  previewAddLabel: "add the label and push, or start the manual preview job."
 };
-function forgeHints(host = "github") {
-  return host === "gitlab" ? GITLAB : GITHUB;
+var HINTS = { github: GITHUB2, gitlab: GITLAB2 };
+function forgeHints(host = DEFAULT_HOST) {
+  return HINTS[host];
 }
 var GITHUB_PUSH = {
   workflows: 'The GitHub App needs the "Workflows: write" repository permission to push commits that change .github/workflows (the release branch is rebuilt from the base branch).',
@@ -69574,8 +69680,12 @@ var GITLAB_PUSH = {
   forbidden: "The token lacks push access. LAUNCHSET_TOKEN needs the write_repository scope and the Maintainer role. CI_JOB_TOKEN can't be used for launchset's pushes: they must start pipelines, and pushes made with CI_JOB_TOKEN never do."
 };
 var GITLAB_JOB_TOKEN_PUSH = "No token was given, so git used the runner's CI_JOB_TOKEN from the clone URL. It can't push launchset's branches and tags (and pushes made with it never start pipelines): set LAUNCHSET_TOKEN to a project or group access token with the api and write_repository scopes, role Maintainer.";
-function gitPushHints(host = "github") {
-  return host === "gitlab" ? GITLAB_PUSH : GITHUB_PUSH;
+var PUSH_HINTS = {
+  github: GITHUB_PUSH,
+  gitlab: GITLAB_PUSH
+};
+function gitPushHints(host = DEFAULT_HOST) {
+  return PUSH_HINTS[host];
 }
 
 // src/core/versions.ts
@@ -90313,8 +90423,8 @@ function gitlabSettings(config2) {
     tagPipelines: config2.gitlab?.tagPipelines ?? false
   };
 }
-function hostConfigIssues(config2, host) {
-  if (host !== "github") return [];
+function hostConfigIssues(config2, host, ci = hostProfile(host).ci) {
+  if (ci !== "actions") return [];
   return Object.values(config2.targets).filter((t) => (t.after ?? []).length > 0).map((t) => ({
     path: `targets.${t.name}.after`,
     message: `is GitLab only: the GitHub workflows build every target in one matrix job, which can't run one target after another. Remove "after" (or do the dependent steps in one target)`
@@ -90795,7 +90905,7 @@ function firstLine(text2) {
   return text2.trim().split(/\r?\n/)[0]?.trim() ?? "";
 }
 function alert(kind, text2, host) {
-  return `> [!${host === "gitlab" ? kind.toLowerCase() : kind}]
+  return `> [!${hostProfile(host).lowercaseAlerts ? kind.toLowerCase() : kind}]
 ${text2.trimEnd().split("\n").map((l) => l === "" ? ">" : `> ${l}`).join("\n")}`;
 }
 function renderSummary(input2) {
@@ -90860,42 +90970,31 @@ var import_semver3 = __toESM(require_semver2(), 1);
 init_errors();
 
 // src/core/forge-links.ts
-var FORGE_HOSTS = ["github", "gitlab"];
-var DEFAULT_SERVER_URLS = {
-  github: "https://github.com",
-  gitlab: "https://gitlab.com"
-};
-function forgeWords(host = "github") {
-  if (host === "gitlab") {
-    return {
-      host,
-      prText: (n) => `!${n}`,
-      prRef: (n) => `refs/merge-requests/${n}/head`,
-      prName: "MR",
-      releaseName: "GitLab release",
-      prereleaseName: "GitLab release"
-    };
-  }
+var DEFAULT_SERVER_URLS = Object.fromEntries(
+  FORGE_HOSTS.map((host) => [host, HOSTS[host].defaultServerUrl])
+);
+function forgeWords(host = DEFAULT_HOST) {
+  const profile = hostProfile(host);
   return {
     host,
-    prText: (n) => `#${n}`,
-    prRef: (n) => `refs/pull/${n}/head`,
-    prName: "PR",
-    releaseName: "GitHub Release",
-    prereleaseName: "GitHub pre-release"
+    prText: (n) => `${profile.prSymbol}${n}`,
+    prRef: profile.prRef,
+    prName: profile.prName,
+    releaseName: profile.releaseName,
+    prereleaseName: profile.prereleaseName
   };
 }
 function forgeLinks(input2) {
   const words = forgeWords(input2.host);
-  const serverUrl = (input2.serverUrl || DEFAULT_SERVER_URLS[words.host]).replace(/\/+$/, "");
+  const profile = hostProfile(words.host);
+  const serverUrl = (input2.serverUrl || profile.defaultServerUrl).replace(/\/+$/, "");
   const repoUrl = `${serverUrl}/${input2.repository}`;
-  const gitlab = words.host === "gitlab";
   return {
     ...words,
     serverUrl,
     repository: input2.repository,
-    prUrl: (n) => gitlab ? `${repoUrl}/-/merge_requests/${n}` : `${repoUrl}/pull/${n}`,
-    runUrl: (id) => gitlab ? `${repoUrl}/-/pipelines/${id}` : `${repoUrl}/actions/runs/${id}`
+    prUrl: (n) => `${repoUrl}/${profile.prPath(n)}`,
+    runUrl: (id) => `${repoUrl}/${ciProfile(input2.ci ?? profile.ci).runPath(id)}`
   };
 }
 
@@ -91201,15 +91300,14 @@ var TagCleanupError = class extends GitError {
 };
 var NUL = "\0";
 var MAX_BUFFER = 256 * 1024 * 1024;
-function normalizeServerUrl(serverUrl, host = "github") {
+function normalizeServerUrl(serverUrl, host = DEFAULT_HOST) {
   const url2 = (serverUrl ?? "").trim() || DEFAULT_SERVER_URLS[host];
   return url2.endsWith("/") ? url2 : `${url2}/`;
 }
-var GIT_TOKEN_USERS = {
-  github: "x-access-token",
-  gitlab: "oauth2"
-};
-function basicAuthHeader(token, host = "github") {
+var GIT_TOKEN_USERS = Object.fromEntries(
+  FORGE_HOSTS.map((host) => [host, HOSTS[host].gitTokenUser])
+);
+function basicAuthHeader(token, host = DEFAULT_HOST) {
   return `AUTHORIZATION: basic ${Buffer.from(`${GIT_TOKEN_USERS[host]}:${token}`).toString("base64")}`;
 }
 function configEnv(entries, baseEnv = process.env) {
@@ -91223,7 +91321,7 @@ function configEnv(entries, baseEnv = process.env) {
   return env;
 }
 var NO_HOOKS = process.platform === "win32" ? "NUL" : "/dev/null";
-function authConfigEnv(token, serverUrl, baseEnv = process.env, owner, host = "github") {
+function authConfigEnv(token, serverUrl, baseEnv = process.env, owner, host = DEFAULT_HOST) {
   const scope = owner ? `${owner.split("/").map(encodeURIComponent).join("/")}/` : "";
   const key = `http.${normalizeServerUrl(serverUrl, host)}${scope}.extraheader`;
   return configEnv(
@@ -91249,16 +91347,18 @@ function remoteAuthScope(url2) {
 function topPathspec(path) {
   return `:(top,literal)${path}`;
 }
-function parseRepoFromRemote(url2, serverUrl, host = "github") {
-  const gitlab = host === "gitlab";
+function parseRepoFromRemote(url2, serverUrl, host = DEFAULT_HOST) {
+  const { selfManagedRemotes, nestedRepositories } = hostProfile(host);
   const known = /* @__PURE__ */ new Set([DEFAULT_SERVER_URLS[host].replace(/^https:\/\//, "")]);
   let root = "/";
   if (serverUrl?.trim()) {
     try {
       const server = new URL(normalizeServerUrl(serverUrl, host));
       known.add(server.host.toLowerCase());
-      if (gitlab) known.add(server.hostname.toLowerCase());
-      if (gitlab) root = server.pathname.endsWith("/") ? server.pathname : `${server.pathname}/`;
+      if (selfManagedRemotes) {
+        known.add(server.hostname.toLowerCase());
+        root = server.pathname.endsWith("/") ? server.pathname : `${server.pathname}/`;
+      }
     } catch {
     }
   }
@@ -91273,17 +91373,17 @@ function parseRepoFromRemote(url2, serverUrl, host = "github") {
     try {
       const parsed = new URL(trimmed);
       if (!["https:", "http:", "ssh:", "git:"].includes(parsed.protocol)) return void 0;
-      remoteHost2 = gitlab && parsed.protocol === "ssh:" ? parsed.hostname : parsed.host;
+      remoteHost2 = selfManagedRemotes && parsed.protocol === "ssh:" ? parsed.hostname : parsed.host;
       path = parsed.pathname;
     } catch {
       return void 0;
     }
   }
   if (!known.has(remoteHost2.toLowerCase())) return void 0;
-  if (gitlab) {
-    if (root !== "/" && `/${path.replace(/^\/+/, "")}`.startsWith(root)) {
-      path = `/${path.replace(/^\/+/, "")}`.slice(root.length);
-    }
+  if (root !== "/" && `/${path.replace(/^\/+/, "")}`.startsWith(root)) {
+    path = `/${path.replace(/^\/+/, "")}`.slice(root.length);
+  }
+  if (nestedRepositories) {
     const match2 = /^\/?(.+?)(?:\.git)?\/*$/.exec(path);
     const segments = match2?.[1]?.split("/") ?? [];
     return segments.length >= 2 && segments.every(Boolean) ? segments.join("/") : void 0;
@@ -91311,30 +91411,46 @@ function assertRefName(kind, name) {
     );
   }
 }
-function gitlabProtected(s) {
-  return s.includes("protected branch") || s.includes("protected tag") || s.includes("not allowed to create this tag") || s.includes("not allowed to create tag") || s.includes("not allowed to force push") || s.includes("not allowed to delete");
-}
+var GIT_FAILURES = {
+  github: {
+    workflows: ["without `workflows` permission", "without workflows permission"],
+    protected: ["gh006", "protected branch", "gh013"],
+    declined: [],
+    auth: [],
+    forbidden: []
+  },
+  gitlab: {
+    workflows: [],
+    protected: [
+      "protected branch",
+      "protected tag",
+      "not allowed to create this tag",
+      "not allowed to create tag",
+      "not allowed to force push",
+      "not allowed to delete"
+    ],
+    declined: ["pre-receive hook declined"],
+    auth: ["http basic: access denied"],
+    forbidden: ["not allowed to push", "not allowed to upload"],
+    noTokenPush: GITLAB_JOB_TOKEN_PUSH
+  }
+};
 function classifyFailure(args, stderr, context = {}) {
   const s = stderr.toLowerCase();
-  const host = context.host ?? "github";
-  const gitlab = host === "gitlab";
+  const host = context.host ?? DEFAULT_HOST;
+  const words = GIT_FAILURES[host];
+  const has = (fragments) => fragments.some((f) => s.includes(f));
   const push = gitPushHints(host);
   const hints = forgeHints(host);
-  const jobToken = gitlab && context.hasToken === false;
-  if (!gitlab && (s.includes("without `workflows` permission") || s.includes("without workflows permission"))) {
-    return { reason: "workflows", hint: push.workflows };
+  const noToken = context.hasToken === false ? words.noTokenPush : void 0;
+  if (has(words.workflows)) return { reason: "workflows", hint: push.workflows };
+  if (has(words.protected)) return { reason: "protected", hint: push.protected };
+  if (has(words.declined)) return { reason: "protected", hint: push.declined };
+  if (s.includes("authentication failed") || s.includes("could not read username") || s.includes("returned error: 401") || has(words.auth)) {
+    return { reason: "auth", hint: noToken ?? push.auth };
   }
-  if (gitlab ? gitlabProtected(s) : s.includes("gh006") || s.includes("protected branch") || s.includes("gh013")) {
-    return { reason: "protected", hint: push.protected };
-  }
-  if (gitlab && s.includes("pre-receive hook declined")) {
-    return { reason: "protected", hint: push.declined };
-  }
-  if (s.includes("authentication failed") || s.includes("could not read username") || s.includes("returned error: 401") || gitlab && s.includes("http basic: access denied")) {
-    return { reason: "auth", hint: jobToken ? GITLAB_JOB_TOKEN_PUSH : push.auth };
-  }
-  if (s.includes("returned error: 403") || s.includes("permission to") || s.includes("denied") || gitlab && (s.includes("not allowed to push") || s.includes("not allowed to upload"))) {
-    return { reason: "forbidden", hint: jobToken ? GITLAB_JOB_TOKEN_PUSH : push.forbidden };
+  if (s.includes("returned error: 403") || s.includes("permission to") || s.includes("denied") || has(words.forbidden)) {
+    return { reason: "forbidden", hint: noToken ?? push.forbidden };
   }
   if (s.includes("shallow") || s.includes("unknown revision") || s.includes("bad revision") || s.includes("not a valid object name") || s.includes("bad object")) {
     return { reason: "missing-object", hint: hints.missingObject };
@@ -91362,7 +91478,7 @@ var Git = class {
   constructor(options) {
     this.cwd = options.cwd;
     this.remote = options.remote ?? "origin";
-    this.host = options.host ?? "github";
+    this.host = options.host ?? DEFAULT_HOST;
     this.serverUrl = normalizeServerUrl(options.serverUrl, this.host);
     this.#identity = options.identity ?? LAUNCHSET_IDENTITY;
     this.#token = options.token || void 0;
@@ -91404,14 +91520,12 @@ var Git = class {
    * ({@link remoteAuthScope}), else `<server>` and the namespace of the parsed repository.
    */
   async #authScope() {
-    if (this.host === "gitlab") {
+    if (hostProfile(this.host).selfManagedRemotes) {
       const url2 = await this.#tryRemoteUrl();
       const scope = url2 === void 0 ? void 0 : remoteAuthScope(url2);
       if (scope) return { serverUrl: scope };
-      const namespace = (await this.repoFromRemote())?.split("/").slice(0, -1).join("/");
-      return namespace ? { serverUrl: this.serverUrl, owner: namespace } : { serverUrl: this.serverUrl };
     }
-    const owner = (await this.repoFromRemote())?.split("/")[0];
+    const owner = (await this.repoFromRemote())?.split("/").slice(0, -1).join("/");
     return owner ? { serverUrl: this.serverUrl, owner } : { serverUrl: this.serverUrl };
   }
   /** Run git; stdout as bytes. Throws only when git can't be started. */
@@ -95388,16 +95502,49 @@ var plist = {
 
 // src/platforms/regex.ts
 var import_semver4 = __toESM(require_semver2(), 1);
-function compile2(file2, options) {
+function mentionsCarriageReturn(pattern) {
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === "\r") return true;
+    if (c !== "\\") continue;
+    if (/^(?:r|x0[dD]|u000[dD]|u\{0*[dD]\}|c[mM])/.test(pattern.slice(i + 1))) return true;
+    i++;
+  }
+  return false;
+}
+function lfView(text2) {
+  const joined = [];
+  let lf = "";
+  let last = 0;
+  for (let at = text2.indexOf("\r\n"); at !== -1; at = text2.indexOf("\r\n", at + 2)) {
+    lf += text2.slice(last, at);
+    joined.push(lf.length);
+    last = at + 1;
+  }
+  lf += text2.slice(last);
+  const toOriginal = (offset2) => {
+    let lo = 0;
+    let hi = joined.length;
+    while (lo < hi) {
+      const mid = lo + hi >> 1;
+      if (joined[mid] < offset2) lo = mid + 1;
+      else hi = mid;
+    }
+    return offset2 + lo;
+  };
+  return { lf, toOriginal };
+}
+function compile2(file2, options, indices) {
   const flags = options.flags ?? "";
   if (flags.includes("y")) {
     throw new StampError(file2, `regex flags "${flags}": the sticky flag (y) isn't supported`);
   }
   try {
     const base = flags.replaceAll("g", "");
+    const counting = indices && !base.includes("d") ? `${base}dg` : `${base}g`;
     return {
       single: new RegExp(options.pattern, base),
-      counting: new RegExp(options.pattern, `${base}g`)
+      counting: new RegExp(options.pattern, counting)
     };
   } catch (e) {
     throw new StampError(
@@ -95406,16 +95553,115 @@ function compile2(file2, options) {
     );
   }
 }
-function matchOnce(text2, file2, options) {
-  const { single: single2, counting } = compile2(file2, options);
-  const matches = [...text2.matchAll(counting)];
+function lineEndingHint(text2, mentionsCr) {
+  const crlf = text2.includes("\r\n");
+  const loneCr = /\r(?!\n)/.test(text2);
+  if (mentionsCr && !text2.includes("\r")) {
+    return ". The pattern mentions \\r, but the file has none (LF line endings); write \\n for a line break, launchset matches it against LF and CRLF line endings alike";
+  }
+  if (mentionsCr) {
+    return ". The file has CR (\\r) characters and the pattern mentions \\r, so it was matched against the file as is; leave \\r out and write \\n for a line break, launchset then matches it against LF and CRLF line endings alike";
+  }
+  if (loneCr) {
+    return `. The file has CR (\\r) characters that aren't followed by \\n${crlf ? "" : " (old Mac line endings)"}; a \\n in the pattern doesn't match those`;
+  }
+  if (crlf) {
+    return ". The file has CRLF (\\r\\n) line endings; launchset matched the pattern as if they were \\n, so line endings aren't the cause";
+  }
+  return "";
+}
+function locate5(text2, file2, options) {
+  const mentionsCr = mentionsCarriageReturn(options.pattern);
+  const useLf = text2.includes("\r\n") && !mentionsCr;
+  const { single: single2, counting } = compile2(file2, options, useLf);
+  const view = useLf ? lfView(text2) : void 0;
+  const matches = [...(view?.lf ?? text2).matchAll(counting)];
   if (matches.length !== 1) {
     throw new StampError(
       file2,
-      `pattern /${options.pattern}/${options.flags ?? ""} matched ${matches.length} times, expected exactly 1; ` + (matches.length === 0 ? "check the pattern against the file" : "make the pattern more specific")
+      `pattern /${options.pattern}/${options.flags ?? ""} matched ${matches.length} times, expected exactly 1; ` + (matches.length === 0 ? `check the pattern against the file${lineEndingHint(text2, mentionsCr)}` : "make the pattern more specific")
     );
   }
-  return { single: single2, match: matches[0] };
+  const match = matches[0];
+  if (!view) {
+    return {
+      start: match.index,
+      end: match.index + match[0].length,
+      // Exactly one match exists, so this replaces only that match; every other byte is untouched.
+      replaceWith: (template) => text2.replace(single2, template)
+    };
+  }
+  const { indices } = match;
+  const original = (range) => range && text2.slice(view.toOriginal(range[0]), view.toOriginal(range[1]));
+  const start = view.toOriginal(match.index);
+  const end = view.toOriginal(match.index + match[0].length);
+  return {
+    start,
+    end,
+    replaceWith: (template) => {
+      const groups = indices.groups;
+      const replacement = expandReplacement(template.replace(/(?<!\r)\n/g, "\r\n"), {
+        matched: text2.slice(start, end),
+        before: text2.slice(0, start),
+        after: text2.slice(end),
+        captures: indices.slice(1).map(original),
+        named: groups && Object.fromEntries(
+          Object.entries(groups).map(([name, range]) => [name, original(range)])
+        )
+      });
+      return text2.slice(0, start) + replacement + text2.slice(end);
+    }
+  };
+}
+function expandReplacement(template, s) {
+  let out = "";
+  let i = 0;
+  while (i < template.length) {
+    const c = template[i];
+    const next = template[i + 1];
+    if (c !== "$" || next === void 0) {
+      out += c;
+      i++;
+    } else if (next === "$") {
+      out += "$";
+      i += 2;
+    } else if (next === "&") {
+      out += s.matched;
+      i += 2;
+    } else if (next === "`") {
+      out += s.before;
+      i += 2;
+    } else if (next === "'") {
+      out += s.after;
+      i += 2;
+    } else if (/[0-9]/.test(next)) {
+      const two = /^[0-9]{2}/.test(template.slice(i + 1)) ? Number(template.slice(i + 1, i + 3)) : 0;
+      const one = Number(next);
+      if (two >= 1 && two <= s.captures.length) {
+        out += s.captures[two - 1] ?? "";
+        i += 3;
+      } else if (one >= 1 && one <= s.captures.length) {
+        out += s.captures[one - 1] ?? "";
+        i += 2;
+      } else {
+        out += "$";
+        i++;
+      }
+    } else if (next === "<") {
+      const close = template.indexOf(">", i + 2);
+      if (s.named === void 0 || close === -1) {
+        out += "$<";
+        i += 2;
+      } else {
+        out += s.named[template.slice(i + 2, close)] ?? "";
+        i = close + 1;
+      }
+    } else {
+      out += "$";
+      i++;
+    }
+  }
+  return out;
 }
 function render(template, file2, values) {
   const needs = (name) => template.includes(`{${name}}`);
@@ -95456,20 +95702,19 @@ function render(template, file2, values) {
 }
 var regexFile = {
   read(text2, file2, options) {
-    const { match } = matchOnce(text2, file2, options);
+    const { start, end } = locate5(text2, file2, options);
     return [
       {
         field: "marketing",
         key: options.pattern,
-        value: match[0],
-        line: lineOf(text2, match.index)
+        value: text2.slice(start, end),
+        line: lineOf(text2, start)
       }
     ];
   },
   write(text2, file2, values, options) {
     if (values.marketing === void 0 && values.build === void 0) return text2;
-    const { single: single2 } = matchOnce(text2, file2, options);
-    return text2.replace(single2, render(options.replace, file2, values));
+    return locate5(text2, file2, options).replaceWith(render(options.replace, file2, values));
   }
 };
 
@@ -95667,7 +95912,7 @@ function walk(doc, path, file2, key) {
   }
   return node2;
 }
-function locate5(text2, file2, key) {
+function locate6(text2, file2, key) {
   const path = key.split(".");
   const hits = [];
   parse4(text2, file2).forEach((doc, index) => {
@@ -95702,7 +95947,7 @@ function locate5(text2, file2, key) {
 }
 var yamlValue = {
   read(text2, file2, options) {
-    const loc = locate5(text2, file2, options.key);
+    const loc = locate6(text2, file2, options.key);
     return [
       {
         field: "marketing",
@@ -95714,7 +95959,7 @@ var yamlValue = {
   },
   write(text2, file2, values, options) {
     if (values.marketing === void 0) return text2;
-    const loc = locate5(text2, file2, options.key);
+    const loc = locate6(text2, file2, options.key);
     const version3 = values.marketing;
     if (!/^[0-9A-Za-z][0-9A-Za-z.+_-]*$/.test(version3)) {
       throw new StampError(
@@ -96293,7 +96538,7 @@ function planPublish(input2, maintenance, releaseSha, notices) {
   if (notLatest) {
     plan.distTag = distTag({ channel: "release", version: version3, maintenance: true });
     notices.push(
-      input2.host === "gitlab" ? `${version3} is lower than the latest release ${latest}: it doesn't move latest (Docker latest/major tags, npm dist-tag). GitLab still lists its release as the latest one (it picks the newest by release date).` : `${version3} is lower than the latest release ${latest}: it doesn't move latest (Docker latest/major tags, npm dist-tag, GitHub latest).`
+      hostProfile(input2.host).latestFlag ? `${version3} is lower than the latest release ${latest}: it doesn't move latest (Docker latest/major tags, npm dist-tag, ${hostProfile(input2.host).name} latest).` : `${version3} is lower than the latest release ${latest}: it doesn't move latest (Docker latest/major tags, npm dist-tag). ${hostProfile(input2.host).name} still lists its release as the latest one (it picks the newest by release date).`
     );
   }
   if (matrix.length === 0) {
@@ -96528,7 +96773,6 @@ function buildReleasePr(input2) {
 }
 function renderReleasePrBody(input2) {
   const PR = forgeWords(input2.host).prName;
-  const gitlab = input2.host === "gitlab";
   const blocks = [
     RELEASE_PR_MARKER,
     `Merging this ${PR} releases **v${input2.version}** (${input2.bump}) from ${code(input2.base)}: it builds and ships every auto target (${joinWords(input2.autoTargets.map(code))}).`,
@@ -96539,7 +96783,7 @@ function renderReleasePrBody(input2) {
       [
         "### Manual targets",
         "",
-        gitlab ? `Stamped with ${input2.version} by this MR, but shipped on demand (a release pipeline run with the \`LAUNCHSET_TARGET\` variable, or \`launchset ship\`):` : `Stamped with ${input2.version} by this PR, but shipped on demand (a release workflow run with the \`target\` input, or \`launchset ship\`):`,
+        `Stamped with ${input2.version} by this ${PR}, but shipped on demand (${forgeHints(input2.host).shipOnDemand}, or \`launchset ship\`):`,
         "",
         ...input2.manualTargets.map((s) => `- ${describeManualTarget(s)}`)
       ].join("\n")
@@ -96796,6 +97040,288 @@ var ForgeError = class extends Error {
 
 // src/flow/context.ts
 init_errors();
+
+// src/flow/ci/index.ts
+init_errors();
+
+// src/flow/ci/github.ts
+init_errors();
+import { readFile as readFile4 } from "node:fs/promises";
+function record2(value2) {
+  return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : void 0;
+}
+function text(value2) {
+  return typeof value2 === "string" && value2 !== "" ? value2 : void 0;
+}
+function parsePr(payload) {
+  const pr = record2(payload.pull_request);
+  if (!pr) return void 0;
+  const head = record2(pr.head);
+  const base = record2(pr.base);
+  const number4 = typeof pr.number === "number" ? pr.number : typeof payload.number === "number" ? payload.number : void 0;
+  const headRepo = text(record2(head?.repo)?.full_name);
+  const baseRepo = text(record2(base?.repo)?.full_name) ?? text(record2(payload.repository)?.full_name);
+  const labels = Array.isArray(pr.labels) ? pr.labels.flatMap((l) => {
+    const name = text(record2(l)?.name);
+    return name ? [name] : [];
+  }) : [];
+  return {
+    number: number4,
+    headRef: text(head?.ref),
+    headSha: text(head?.sha),
+    headRepo,
+    baseRef: text(base?.ref),
+    baseSha: text(base?.sha),
+    baseRepo,
+    author: text(record2(pr.user)?.login),
+    labels,
+    fork: headRepo === void 0 || headRepo !== baseRepo,
+    action: text(payload.action),
+    label: text(record2(payload.label)?.name)
+  };
+}
+var KINDS = {
+  pull_request: "pr",
+  push: "push",
+  workflow_dispatch: "dispatch"
+};
+function parseEvent(event) {
+  const { payload } = event;
+  const inputs = {};
+  for (const [key, value2] of Object.entries(record2(payload.inputs) ?? {})) {
+    if (typeof value2 === "string") inputs[key] = value2;
+    else if (typeof value2 === "boolean" || typeof value2 === "number") inputs[key] = String(value2);
+  }
+  const info2 = { name: event.name, kind: KINDS[event.name] ?? "other", inputs };
+  const pr = parsePr(payload);
+  if (pr) info2.pr = pr;
+  const ref = text(payload.ref);
+  if (ref) info2.ref = ref;
+  const after = text(payload.after);
+  if (after && !/^0+$/.test(after)) info2.sha = after;
+  return info2;
+}
+function positiveInt(value2) {
+  if (!value2) return void 0;
+  const n = Number(value2);
+  return Number.isSafeInteger(n) && n > 0 ? n : void 0;
+}
+function githubRunInfo(env) {
+  const id = positiveInt(env.GITHUB_RUN_ID);
+  const number4 = positiveInt(env.GITHUB_RUN_NUMBER);
+  const attempt = positiveInt(env.GITHUB_RUN_ATTEMPT);
+  if (id === void 0 && number4 === void 0) return void 0;
+  const run = {};
+  if (id !== void 0) run.id = id;
+  if (number4 !== void 0) run.number = number4;
+  if (attempt !== void 0) run.attempt = attempt;
+  return run;
+}
+async function readActionsEvent(env) {
+  const name = env.GITHUB_EVENT_NAME;
+  if (!name) return void 0;
+  let payload = {};
+  if (env.GITHUB_EVENT_PATH) {
+    try {
+      payload = JSON.parse(await readFile4(env.GITHUB_EVENT_PATH, "utf8"));
+    } catch (error63) {
+      throw new LaunchsetError(
+        "invalid-event",
+        `Can't read the GitHub event payload at ${env.GITHUB_EVENT_PATH}: ${error63.message}`
+      );
+    }
+  }
+  return { name, payload };
+}
+function githubEnvironment(env, event) {
+  const ci = {
+    host: "github",
+    inCi: env.GITHUB_ACTIONS === "true",
+    serverUrl: (env.GITHUB_SERVER_URL || DEFAULT_SERVER_URLS.github).replace(/\/+$/, "")
+  };
+  const set2 = (key, value2) => {
+    if (value2) ci[key] = value2;
+  };
+  set2("apiUrl", env.GITHUB_API_URL);
+  set2("repository", env.GITHUB_REPOSITORY);
+  set2("token", env.LAUNCHSET_TOKEN || env.GITHUB_TOKEN);
+  set2("fallbackToken", env.GITHUB_TOKEN);
+  set2("event", event ? parseEvent(event) : void 0);
+  set2("run", githubRunInfo(env));
+  set2("ref", env.GITHUB_REF);
+  set2("refName", env.GITHUB_REF_NAME);
+  set2("sha", env.GITHUB_SHA);
+  return ci;
+}
+async function readGitHubEnvironment(env) {
+  return githubEnvironment(env, await readActionsEvent(env));
+}
+
+// src/flow/ci/gitlab.ts
+function positiveInt2(value2) {
+  if (!value2) return void 0;
+  const n = Number(value2);
+  return Number.isSafeInteger(n) && n > 0 ? n : void 0;
+}
+function gitlabRunInfo(env) {
+  const id = positiveInt2(env.CI_PIPELINE_ID);
+  const number4 = positiveInt2(env.CI_PIPELINE_IID);
+  if (id === void 0 && number4 === void 0) return void 0;
+  const run = {};
+  if (id !== void 0) run.id = id;
+  if (number4 !== void 0) run.number = number4;
+  return run;
+}
+function mergeRequest(env) {
+  const sourceId = env.CI_MERGE_REQUEST_SOURCE_PROJECT_ID;
+  const targetId = env.CI_MERGE_REQUEST_PROJECT_ID;
+  const labels = (env.CI_MERGE_REQUEST_LABELS ?? "").split(",").map((label) => label.trim()).filter(Boolean);
+  const pr = { labels, fork: Boolean(sourceId && targetId && sourceId !== targetId) };
+  const set2 = (key, value2) => {
+    if (value2) pr[key] = value2;
+  };
+  set2("number", positiveInt2(env.CI_MERGE_REQUEST_IID));
+  set2("headRef", env.CI_MERGE_REQUEST_SOURCE_BRANCH_NAME);
+  set2("headSha", env.CI_MERGE_REQUEST_SOURCE_BRANCH_SHA || env.CI_COMMIT_SHA);
+  set2("headRepo", env.CI_MERGE_REQUEST_SOURCE_PROJECT_PATH);
+  set2("baseRef", env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME);
+  set2("baseSha", env.CI_MERGE_REQUEST_TARGET_BRANCH_SHA);
+  set2("baseRepo", env.CI_MERGE_REQUEST_PROJECT_PATH);
+  if (env.LAUNCHSET_PREVIEW_MANUAL === "true") pr.manual = true;
+  return pr;
+}
+function dispatchInputs(env) {
+  const inputs = {};
+  if (env.LAUNCHSET_TARGET) {
+    inputs.target = env.LAUNCHSET_TARGET;
+    inputs.targets = env.LAUNCHSET_TARGET;
+  }
+  if (env.LAUNCHSET_RELEASE_VERSION) inputs.version = env.LAUNCHSET_RELEASE_VERSION;
+  if (env.LAUNCHSET_FORCE) inputs.force = env.LAUNCHSET_FORCE;
+  return inputs;
+}
+var MANUAL_SOURCES = /* @__PURE__ */ new Set(["web", "api", "trigger", "pipeline", "chat"]);
+function gitlabEvent(env) {
+  const name = env.CI_PIPELINE_SOURCE;
+  if (!name) return void 0;
+  const branch = env.CI_COMMIT_BRANCH;
+  const tag2 = env.CI_COMMIT_TAG;
+  const sha = env.CI_COMMIT_SHA;
+  const ref = branch ? `refs/heads/${branch}` : tag2 ? `refs/tags/${tag2}` : void 0;
+  let kind = "other";
+  let pr;
+  let inputs = {};
+  if (name === "merge_request_event") {
+    kind = "pr";
+    pr = mergeRequest(env);
+  } else if (name === "parent_pipeline") {
+    if (env.CI_MERGE_REQUEST_IID) {
+      kind = "pr";
+      pr = mergeRequest(env);
+    } else if (branch) kind = "push";
+  } else if (name === "push") {
+    kind = tag2 ? "other" : branch ? "push" : "other";
+  } else if (MANUAL_SOURCES.has(name)) {
+    kind = "dispatch";
+    inputs = dispatchInputs(env);
+  }
+  const info2 = { name, kind, inputs };
+  if (pr) info2.pr = pr;
+  if (ref && kind !== "pr") info2.ref = ref;
+  if (sha && !/^0+$/.test(sha) && kind !== "pr") info2.sha = sha;
+  return info2;
+}
+function gitlabEnvironment(env) {
+  const ci = {
+    host: "gitlab",
+    inCi: env.GITLAB_CI === "true",
+    serverUrl: (env.CI_SERVER_URL || DEFAULT_SERVER_URLS.gitlab).replace(/\/+$/, "")
+  };
+  const set2 = (key, value2) => {
+    if (value2) ci[key] = value2;
+  };
+  set2("apiUrl", env.CI_API_V4_URL);
+  set2("repository", env.CI_PROJECT_PATH);
+  set2("token", env.LAUNCHSET_TOKEN || env.GITLAB_TOKEN);
+  set2("fallbackToken", env.CI_JOB_TOKEN);
+  if (env.CI_JOB_TOKEN) ci.fallbackTokenKind = "job";
+  set2("event", gitlabEvent(env));
+  set2("run", gitlabRunInfo(env));
+  set2(
+    "ref",
+    env.CI_COMMIT_BRANCH ? `refs/heads/${env.CI_COMMIT_BRANCH}` : env.CI_COMMIT_TAG ? `refs/tags/${env.CI_COMMIT_TAG}` : void 0
+  );
+  set2("refName", env.CI_COMMIT_REF_NAME);
+  set2("sha", env.CI_COMMIT_SHA);
+  return ci;
+}
+
+// src/flow/ci/index.ts
+function remoteHost(url2) {
+  const trimmed = url2.trim();
+  const scp = /^(?:[^@/]+@)?([^:/]+):(?!\/)/.exec(trimmed);
+  if (scp && !/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return scp[1]?.toLowerCase();
+  try {
+    return new URL(trimmed).hostname.toLowerCase() || void 0;
+  } catch {
+    return void 0;
+  }
+}
+function serverUrlFromRemote(url2) {
+  const trimmed = url2.trim();
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+        return parsed.host ? `${parsed.protocol}//${parsed.host}` : void 0;
+      }
+      if (parsed.protocol === "ssh:" || parsed.protocol === "git:") {
+        return parsed.hostname ? `https://${parsed.hostname}` : void 0;
+      }
+      return void 0;
+    } catch {
+      return void 0;
+    }
+  }
+  const host = remoteHost(trimmed);
+  return host ? `https://${host}` : void 0;
+}
+function hostFromEnv(env) {
+  const explicit = env.LAUNCHSET_HOST?.trim();
+  if (explicit) {
+    const host = explicit.toLowerCase();
+    if (!isForgeHost(host)) {
+      throw new LaunchsetError(
+        "invalid-host",
+        `LAUNCHSET_HOST is "${explicit}", expected ${FORGE_HOSTS.map((h) => `"${h}"`).join(" or ")}`,
+        { hint: "Unset LAUNCHSET_HOST to detect the host from the CI environment and the remote." }
+      );
+    }
+    return { host, source: "LAUNCHSET_HOST" };
+  }
+  const ci = ciFromEnv(env);
+  if (ci) return { host: CI_SYSTEMS[ci].hosts[0], source: CI_SYSTEMS[ci].detect.variable };
+  return void 0;
+}
+async function detectHost(env, remoteUrl) {
+  const fromEnv = hostFromEnv(env);
+  if (fromEnv) return fromEnv;
+  const url2 = await remoteUrl?.().catch(() => void 0);
+  const hostname3 = url2 === void 0 ? void 0 : remoteHost(url2);
+  const host = hostname3 ? hostFromRemoteName(hostname3) : void 0;
+  if (host) return { host, source: "remote" };
+  return { host: DEFAULT_HOST, source: "default" };
+}
+function hostFromRemoteName(hostname3) {
+  return FORGE_HOSTS.find((host) => HOSTS[host].remoteMatches?.(hostname3));
+}
+var ENVIRONMENTS = { actions: readGitHubEnvironment, "gitlab-ci": gitlabEnvironment };
+async function readCiEnvironment(host, env) {
+  const system = ciSystemFor(host, env);
+  const ci = await ENVIRONMENTS[system](env);
+  ci.system = system;
+  return ci;
+}
 
 // src/forge/closed-prs.ts
 function cachedClosedPrs(list, invalid2) {
@@ -97661,279 +98187,40 @@ ${body}`;
   };
 }
 
-// src/flow/ci/index.ts
-init_errors();
-
-// src/flow/ci/github.ts
-init_errors();
-import { readFile as readFile4 } from "node:fs/promises";
-function record2(value2) {
-  return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : void 0;
-}
-function text(value2) {
-  return typeof value2 === "string" && value2 !== "" ? value2 : void 0;
-}
-function parsePr(payload) {
-  const pr = record2(payload.pull_request);
-  if (!pr) return void 0;
-  const head = record2(pr.head);
-  const base = record2(pr.base);
-  const number4 = typeof pr.number === "number" ? pr.number : typeof payload.number === "number" ? payload.number : void 0;
-  const headRepo = text(record2(head?.repo)?.full_name);
-  const baseRepo = text(record2(base?.repo)?.full_name) ?? text(record2(payload.repository)?.full_name);
-  const labels = Array.isArray(pr.labels) ? pr.labels.flatMap((l) => {
-    const name = text(record2(l)?.name);
-    return name ? [name] : [];
-  }) : [];
-  return {
-    number: number4,
-    headRef: text(head?.ref),
-    headSha: text(head?.sha),
-    headRepo,
-    baseRef: text(base?.ref),
-    baseSha: text(base?.sha),
-    baseRepo,
-    author: text(record2(pr.user)?.login),
-    labels,
-    fork: headRepo === void 0 || headRepo !== baseRepo,
-    action: text(payload.action),
-    label: text(record2(payload.label)?.name)
-  };
-}
-var KINDS = {
-  pull_request: "pr",
-  push: "push",
-  workflow_dispatch: "dispatch"
+// src/flow/hosts.ts
+var HOST_ADAPTERS = {
+  github: {
+    createForge: (input2) => createGitHub({
+      token: input2.token,
+      repository: input2.repository,
+      ...input2.apiUrl ? { apiUrl: input2.apiUrl } : {},
+      log: input2.log
+    })
+  },
+  gitlab: {
+    createForge: (input2) => createGitLab({
+      token: input2.token,
+      ...input2.tokenKind ? { tokenKind: input2.tokenKind } : {},
+      repository: input2.repository,
+      ...input2.apiUrl ? { apiUrl: input2.apiUrl } : {},
+      serverUrl: input2.serverUrl,
+      ...input2.commitHost ? { commitHost: input2.commitHost } : {},
+      log: input2.log
+    }),
+    async serverFromRemote(ci, env, remoteUrl) {
+      if (env.CI_SERVER_URL) return;
+      const url2 = await remoteUrl();
+      const fromRemote = url2 === void 0 ? void 0 : serverUrlFromRemote(url2);
+      if (!fromRemote) return;
+      ci.serverUrl = fromRemote;
+      if (!env.CI_API_V4_URL) ci.apiUrl = `${fromRemote}/api/v4`;
+    },
+    commitIdentity: {
+      host: (env, serverUrl) => env.CI_SERVER_HOST?.trim() || serverHostOf(serverUrl),
+      fallback: fallbackIdentity
+    }
+  }
 };
-function parseEvent(event) {
-  const { payload } = event;
-  const inputs = {};
-  for (const [key, value2] of Object.entries(record2(payload.inputs) ?? {})) {
-    if (typeof value2 === "string") inputs[key] = value2;
-    else if (typeof value2 === "boolean" || typeof value2 === "number") inputs[key] = String(value2);
-  }
-  const info2 = { name: event.name, kind: KINDS[event.name] ?? "other", inputs };
-  const pr = parsePr(payload);
-  if (pr) info2.pr = pr;
-  const ref = text(payload.ref);
-  if (ref) info2.ref = ref;
-  const after = text(payload.after);
-  if (after && !/^0+$/.test(after)) info2.sha = after;
-  return info2;
-}
-function positiveInt(value2) {
-  if (!value2) return void 0;
-  const n = Number(value2);
-  return Number.isSafeInteger(n) && n > 0 ? n : void 0;
-}
-function githubRunInfo(env) {
-  const id = positiveInt(env.GITHUB_RUN_ID);
-  const number4 = positiveInt(env.GITHUB_RUN_NUMBER);
-  const attempt = positiveInt(env.GITHUB_RUN_ATTEMPT);
-  if (id === void 0 && number4 === void 0) return void 0;
-  const run = {};
-  if (id !== void 0) run.id = id;
-  if (number4 !== void 0) run.number = number4;
-  if (attempt !== void 0) run.attempt = attempt;
-  return run;
-}
-async function readActionsEvent(env) {
-  const name = env.GITHUB_EVENT_NAME;
-  if (!name) return void 0;
-  let payload = {};
-  if (env.GITHUB_EVENT_PATH) {
-    try {
-      payload = JSON.parse(await readFile4(env.GITHUB_EVENT_PATH, "utf8"));
-    } catch (error63) {
-      throw new LaunchsetError(
-        "invalid-event",
-        `Can't read the GitHub event payload at ${env.GITHUB_EVENT_PATH}: ${error63.message}`
-      );
-    }
-  }
-  return { name, payload };
-}
-function githubEnvironment(env, event) {
-  const ci = {
-    host: "github",
-    inCi: env.GITHUB_ACTIONS === "true",
-    serverUrl: (env.GITHUB_SERVER_URL || DEFAULT_SERVER_URLS.github).replace(/\/+$/, "")
-  };
-  const set2 = (key, value2) => {
-    if (value2) ci[key] = value2;
-  };
-  set2("apiUrl", env.GITHUB_API_URL);
-  set2("repository", env.GITHUB_REPOSITORY);
-  set2("token", env.LAUNCHSET_TOKEN || env.GITHUB_TOKEN);
-  set2("fallbackToken", env.GITHUB_TOKEN);
-  set2("event", event ? parseEvent(event) : void 0);
-  set2("run", githubRunInfo(env));
-  set2("ref", env.GITHUB_REF);
-  set2("refName", env.GITHUB_REF_NAME);
-  set2("sha", env.GITHUB_SHA);
-  return ci;
-}
-async function readGitHubEnvironment(env) {
-  return githubEnvironment(env, await readActionsEvent(env));
-}
-
-// src/flow/ci/gitlab.ts
-function positiveInt2(value2) {
-  if (!value2) return void 0;
-  const n = Number(value2);
-  return Number.isSafeInteger(n) && n > 0 ? n : void 0;
-}
-function gitlabRunInfo(env) {
-  const id = positiveInt2(env.CI_PIPELINE_ID);
-  const number4 = positiveInt2(env.CI_PIPELINE_IID);
-  if (id === void 0 && number4 === void 0) return void 0;
-  const run = {};
-  if (id !== void 0) run.id = id;
-  if (number4 !== void 0) run.number = number4;
-  return run;
-}
-function mergeRequest(env) {
-  const sourceId = env.CI_MERGE_REQUEST_SOURCE_PROJECT_ID;
-  const targetId = env.CI_MERGE_REQUEST_PROJECT_ID;
-  const labels = (env.CI_MERGE_REQUEST_LABELS ?? "").split(",").map((label) => label.trim()).filter(Boolean);
-  const pr = { labels, fork: Boolean(sourceId && targetId && sourceId !== targetId) };
-  const set2 = (key, value2) => {
-    if (value2) pr[key] = value2;
-  };
-  set2("number", positiveInt2(env.CI_MERGE_REQUEST_IID));
-  set2("headRef", env.CI_MERGE_REQUEST_SOURCE_BRANCH_NAME);
-  set2("headSha", env.CI_MERGE_REQUEST_SOURCE_BRANCH_SHA || env.CI_COMMIT_SHA);
-  set2("headRepo", env.CI_MERGE_REQUEST_SOURCE_PROJECT_PATH);
-  set2("baseRef", env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME);
-  set2("baseSha", env.CI_MERGE_REQUEST_TARGET_BRANCH_SHA);
-  set2("baseRepo", env.CI_MERGE_REQUEST_PROJECT_PATH);
-  if (env.LAUNCHSET_PREVIEW_MANUAL === "true") pr.manual = true;
-  return pr;
-}
-function dispatchInputs(env) {
-  const inputs = {};
-  if (env.LAUNCHSET_TARGET) {
-    inputs.target = env.LAUNCHSET_TARGET;
-    inputs.targets = env.LAUNCHSET_TARGET;
-  }
-  if (env.LAUNCHSET_RELEASE_VERSION) inputs.version = env.LAUNCHSET_RELEASE_VERSION;
-  if (env.LAUNCHSET_FORCE) inputs.force = env.LAUNCHSET_FORCE;
-  return inputs;
-}
-var MANUAL_SOURCES = /* @__PURE__ */ new Set(["web", "api", "trigger", "pipeline", "chat"]);
-function gitlabEvent(env) {
-  const name = env.CI_PIPELINE_SOURCE;
-  if (!name) return void 0;
-  const branch = env.CI_COMMIT_BRANCH;
-  const tag2 = env.CI_COMMIT_TAG;
-  const sha = env.CI_COMMIT_SHA;
-  const ref = branch ? `refs/heads/${branch}` : tag2 ? `refs/tags/${tag2}` : void 0;
-  let kind = "other";
-  let pr;
-  let inputs = {};
-  if (name === "merge_request_event") {
-    kind = "pr";
-    pr = mergeRequest(env);
-  } else if (name === "parent_pipeline") {
-    if (env.CI_MERGE_REQUEST_IID) {
-      kind = "pr";
-      pr = mergeRequest(env);
-    } else if (branch) kind = "push";
-  } else if (name === "push") {
-    kind = tag2 ? "other" : branch ? "push" : "other";
-  } else if (MANUAL_SOURCES.has(name)) {
-    kind = "dispatch";
-    inputs = dispatchInputs(env);
-  }
-  const info2 = { name, kind, inputs };
-  if (pr) info2.pr = pr;
-  if (ref && kind !== "pr") info2.ref = ref;
-  if (sha && !/^0+$/.test(sha) && kind !== "pr") info2.sha = sha;
-  return info2;
-}
-function gitlabEnvironment(env) {
-  const ci = {
-    host: "gitlab",
-    inCi: env.GITLAB_CI === "true",
-    serverUrl: (env.CI_SERVER_URL || DEFAULT_SERVER_URLS.gitlab).replace(/\/+$/, "")
-  };
-  const set2 = (key, value2) => {
-    if (value2) ci[key] = value2;
-  };
-  set2("apiUrl", env.CI_API_V4_URL);
-  set2("repository", env.CI_PROJECT_PATH);
-  set2("token", env.LAUNCHSET_TOKEN || env.GITLAB_TOKEN);
-  set2("fallbackToken", env.CI_JOB_TOKEN);
-  if (env.CI_JOB_TOKEN) ci.fallbackTokenKind = "job";
-  set2("event", gitlabEvent(env));
-  set2("run", gitlabRunInfo(env));
-  set2(
-    "ref",
-    env.CI_COMMIT_BRANCH ? `refs/heads/${env.CI_COMMIT_BRANCH}` : env.CI_COMMIT_TAG ? `refs/tags/${env.CI_COMMIT_TAG}` : void 0
-  );
-  set2("refName", env.CI_COMMIT_REF_NAME);
-  set2("sha", env.CI_COMMIT_SHA);
-  return ci;
-}
-
-// src/flow/ci/index.ts
-function remoteHost(url2) {
-  const trimmed = url2.trim();
-  const scp = /^(?:[^@/]+@)?([^:/]+):(?!\/)/.exec(trimmed);
-  if (scp && !/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return scp[1]?.toLowerCase();
-  try {
-    return new URL(trimmed).hostname.toLowerCase() || void 0;
-  } catch {
-    return void 0;
-  }
-}
-function serverUrlFromRemote(url2) {
-  const trimmed = url2.trim();
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
-    try {
-      const parsed = new URL(trimmed);
-      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
-        return parsed.host ? `${parsed.protocol}//${parsed.host}` : void 0;
-      }
-      if (parsed.protocol === "ssh:" || parsed.protocol === "git:") {
-        return parsed.hostname ? `https://${parsed.hostname}` : void 0;
-      }
-      return void 0;
-    } catch {
-      return void 0;
-    }
-  }
-  const host = remoteHost(trimmed);
-  return host ? `https://${host}` : void 0;
-}
-function hostFromEnv(env) {
-  const explicit = env.LAUNCHSET_HOST?.trim();
-  if (explicit) {
-    const host = explicit.toLowerCase();
-    if (!FORGE_HOSTS.includes(host)) {
-      throw new LaunchsetError(
-        "invalid-host",
-        `LAUNCHSET_HOST is "${explicit}", expected ${FORGE_HOSTS.map((h) => `"${h}"`).join(" or ")}`,
-        { hint: "Unset LAUNCHSET_HOST to detect the host from the CI environment and the remote." }
-      );
-    }
-    return { host, source: "LAUNCHSET_HOST" };
-  }
-  if (env.GITLAB_CI === "true") return { host: "gitlab", source: "GITLAB_CI" };
-  if (env.GITHUB_ACTIONS === "true") return { host: "github", source: "GITHUB_ACTIONS" };
-  return void 0;
-}
-async function detectHost(env, remoteUrl) {
-  const fromEnv = hostFromEnv(env);
-  if (fromEnv) return fromEnv;
-  const url2 = await remoteUrl?.().catch(() => void 0);
-  const host = url2 === void 0 ? void 0 : remoteHost(url2);
-  if (host?.includes("gitlab")) return { host: "gitlab", source: "remote" };
-  return { host: "github", source: "default" };
-}
-async function readCiEnvironment(host, env) {
-  return host === "gitlab" ? gitlabEnvironment(env) : readGitHubEnvironment(env);
-}
 
 // src/flow/context.ts
 var silentLogger = { info() {
@@ -97955,23 +98242,18 @@ async function createContext(options) {
   const detected = await detectHost(env, origin);
   const { host } = detected;
   if (detected.source !== "default") {
-    const issues = hostConfigIssues(config2, host);
+    const issues = hostConfigIssues(config2, host, ciSystemFor(host, env));
     if (issues.length > 0) throw new ConfigError(issues, file2);
   }
+  const adapter = HOST_ADAPTERS[host];
   const ci = await readCiEnvironment(host, env);
-  if (host === "gitlab" && !env.CI_SERVER_URL) {
-    const url2 = await origin();
-    const fromRemote = url2 === void 0 ? void 0 : serverUrlFromRemote(url2);
-    if (fromRemote) {
-      ci.serverUrl = fromRemote;
-      if (!env.CI_API_V4_URL) ci.apiUrl = `${fromRemote}/api/v4`;
-    }
-  }
+  await adapter.serverFromRemote?.(ci, env, origin);
   const { serverUrl } = ci;
   const token = options.token || ci.token || void 0;
-  const commitHost = env.CI_SERVER_HOST?.trim() || serverHostOf(serverUrl);
+  const { commitIdentity } = adapter;
+  const commitHost = commitIdentity?.host(env, serverUrl);
   let commitForge;
-  const identity = host === "gitlab" ? async () => await commitForge?.identity?.() ?? fallbackIdentity(commitHost) : void 0;
+  const identity = commitIdentity && commitHost !== void 0 ? async () => await commitForge?.identity?.() ?? commitIdentity.fallback(commitHost) : void 0;
   const git = new Git({
     cwd: root,
     ...token ? { token } : {},
@@ -97984,21 +98266,13 @@ async function createContext(options) {
   if (!repository) repository = await git.repoFromRemote().catch(() => void 0) ?? void 0;
   const client = (clientToken, kind) => {
     if (!clientToken || !repository) return void 0;
-    if (host === "gitlab") {
-      return createGitLab({
-        token: clientToken,
-        ...kind ? { tokenKind: kind } : {},
-        repository,
-        ...ci.apiUrl ? { apiUrl: ci.apiUrl } : {},
-        serverUrl,
-        commitHost,
-        log: log3
-      });
-    }
-    return createGitHub({
+    return adapter.createForge({
       token: clientToken,
+      ...kind ? { tokenKind: kind } : {},
       repository,
       ...ci.apiUrl ? { apiUrl: ci.apiUrl } : {},
+      serverUrl,
+      ...commitHost !== void 0 ? { commitHost } : {},
       log: log3
     });
   };
@@ -98024,20 +98298,26 @@ async function createContext(options) {
   if (repository) context.repository = repository;
   const fromEnv = ci.run ? { ...ci.run } : void 0;
   if (fromEnv?.id !== void 0 && repository) {
-    fromEnv.url = forgeLinks({ host, serverUrl, repository }).runUrl(fromEnv.id);
+    fromEnv.url = forgeLinks({
+      host,
+      serverUrl,
+      repository,
+      ...ci.system ? { ci: ci.system } : {}
+    }).runUrl(fromEnv.id);
   }
   const run = options.run ? { ...fromEnv, ...options.run } : fromEnv;
   if (run) context.run = run;
   return context;
 }
+function ciSystemOf(context) {
+  return context.ci.system ?? hostProfile(context.host).ci;
+}
 function requireForge(context, what) {
   if (context.forge) return context.forge;
   const hints = forgeHints(context.host);
-  throw new LaunchsetError(
-    context.host === "gitlab" ? "no-gitlab-token" : "no-github-token",
-    `${what} ${hints.tokenNeeded}`,
-    { hint: hints.tokenHint(Boolean(context.repository)) }
-  );
+  throw new LaunchsetError(hostProfile(context.host).noTokenError, `${what} ${hints.tokenNeeded}`, {
+    hint: hints.tokenHint(Boolean(context.repository))
+  });
 }
 
 // src/flow/gather.ts
@@ -98056,7 +98336,7 @@ var BLOCK = /<!-- launchset:manual-targets(?<data>[\s\S]*?)-->[\s\S]*?<!-- \/lau
 var MANUAL_TARGETS_HEADING = "### Manual targets";
 function renderEntry2(entry, version3, host) {
   if (!entry.shipped) {
-    const how = !version3 ? "" : host === "gitlab" ? ` (ship it with a release pipeline run with ${code(`LAUNCHSET_TARGET=${entry.target}`)} and ${code(`LAUNCHSET_RELEASE_VERSION=${version3}`)})` : ` (ship it with a release workflow run with target ${code(entry.target)} and version ${code(version3)})`;
+    const how = version3 ? ` (ship it with ${forgeHints(host).shipTarget(entry.target, version3)})` : "";
     return `- ${code(entry.target)}: not shipped yet${how}`;
   }
   const date5 = entry.date !== null ? ` ${entry.date}` : "";
@@ -98464,7 +98744,7 @@ Fix the build and start the ship again (same target and version).`
       if (action) actions.push(action);
       else
         notices.push(
-          `The ${tag2} ${input2.host === "gitlab" ? releaseName : "Release"} already lists ${target} as shipped.`
+          `The ${tag2} ${hostProfile(input2.host).releaseOfTag} already lists ${target} as shipped.`
         );
     } else {
       const section = input2.changelog === null ? null : extractSection(input2.changelog, version3);
@@ -98543,7 +98823,7 @@ function renderFinalizeSummary(result, host, shipTarget) {
     paragraphs.push(result.actions.map((a) => `- ${describeAction(a, releaseName)}`).join("\n"));
   } else {
     paragraphs.push(
-      host === "gitlab" ? "Nothing to change: tags and releases are up to date." : "Nothing to change: tags and Releases are up to date."
+      `Nothing to change: tags and ${hostProfile(host).releaseNoun}s are up to date.`
     );
   }
   return renderSummary({
@@ -98996,7 +99276,7 @@ function releaseInputFor(context, state, event) {
     now: context.now
   };
   if (state.releaseCommit) input2.releaseCommit = state.releaseCommit;
-  if (context.host !== "github") input2.host = context.host;
+  if (context.host !== DEFAULT_HOST) input2.host = context.host;
   if (context.run) input2.run = context.run;
   if (context.repository) input2.repository = context.repository;
   return input2;
@@ -99292,7 +99572,7 @@ async function check2(context, options = {}) {
     tags,
     changesetDir: dir,
     ...options.docsUrl ? { docsUrl: options.docsUrl } : {},
-    ...context.host !== "github" ? { host: context.host } : {}
+    ...context.host !== DEFAULT_HOST ? { host: context.host } : {}
   });
   const data = { result };
   let summary2 = result.summary;
@@ -99338,7 +99618,9 @@ async function check2(context, options = {}) {
   return { ok: result.ok, outputs: {}, summary: summary2, lines, data };
 }
 function gitlabCommentFailure(context, error63, pr) {
-  if (context.host !== "gitlab" || !(error63 instanceof ForgeError)) return void 0;
+  if (ciSystemOf(context) !== "gitlab-ci" || !(error63 instanceof ForgeError)) {
+    return void 0;
+  }
   const mr = forgeWords("gitlab").prText(pr.number);
   const denied = error63.status === 401 || error63.status === 403 || error63.status === 404;
   if (pr.fork && (denied || !context.token)) {
@@ -99366,7 +99648,7 @@ function gitlabCommentFailure(context, error63, pr) {
   return void 0;
 }
 async function fetchAuthor(context, number4) {
-  if (context.host !== "gitlab" || !context.forge || number4 <= 0) return "";
+  if (ciSystemOf(context) !== "gitlab-ci" || !context.forge || number4 <= 0) return "";
   try {
     return (await context.forge.getPr(number4)).author;
   } catch (error63) {
@@ -99375,7 +99657,9 @@ async function fetchAuthor(context, number4) {
   }
 }
 async function headOnlyCheckout(context, tip, headSha) {
-  if (context.host !== "gitlab" || context.ci.event?.kind !== "pr") return false;
+  if (ciSystemOf(context) !== "gitlab-ci" || context.ci.event?.kind !== "pr") {
+    return false;
+  }
   if (await context.git.headSha() !== headSha) return false;
   return !await context.git.isAncestor(tip, headSha);
 }
@@ -99430,12 +99714,12 @@ import { resolve as resolve6 } from "node:path";
 
 // src/flow/git-ops.ts
 init_errors();
-var GITLAB_SKIP_CI = "ci.skip";
 function tagPushOptions(context, name) {
-  if (context.host !== "gitlab") return [];
+  const skipCi = hostProfile(context.host).skipCiPushOption;
+  if (!skipCi) return [];
   const index = indexTags([name], { tags: context.config.tags, targets: context.config.targets });
   const internal = index.partials.size > 0 || index.markerTags.length > 0;
-  if (internal || !gitlabSettings(context.config).tagPipelines) return [GITLAB_SKIP_CI];
+  if (internal || !gitlabSettings(context.config).tagPipelines) return [skipCi];
   return [];
 }
 function tagPushOptionsFor(context, name) {
@@ -99601,7 +99885,7 @@ async function existingReleases(forge, tags) {
   });
   return releases;
 }
-function gitlabReleaseOrder(actions) {
+function latestLastOrder(actions) {
   const pre = (a) => a.kind === "create-release" && a.prerelease ? 0 : 1;
   const releases = actions.filter((a) => a.kind === "create-release");
   const sorted = [...releases].sort((a, b) => pre(a) - pre(b));
@@ -99611,7 +99895,7 @@ function gitlabReleaseOrder(actions) {
 async function executeFinalizeActions(context, forge, actions) {
   const executed = [];
   let backportPr;
-  const ordered = context.host === "gitlab" ? gitlabReleaseOrder(actions) : actions;
+  const ordered = hostProfile(context.host).latestFlag ? actions : latestLastOrder(actions);
   for (const action of ordered) {
     switch (action.kind) {
       case "create-tag":
@@ -99757,7 +100041,7 @@ function describe5(executed, host) {
     case "create-tag":
       return `tag ${action.tag} at ${action.sha.slice(0, 7)}: ${result}`;
     case "create-release":
-      return `created ${action.prerelease && host !== "gitlab" ? "pre-release" : "release"} ${action.name}: ${result}`;
+      return `created ${action.prerelease && hostProfile(host).prereleaseFlag ? "pre-release" : "release"} ${action.name}: ${result}`;
     case "update-release":
       return `updated release ${action.name}: ${result}`;
     case "backport-changelog":
@@ -99839,7 +100123,7 @@ async function mark(context, options) {
         now: context.now,
         ...context.run ? { run: context.run } : {},
         ...context.repository ? { repository: context.repository } : {},
-        ...context.host !== "github" ? { host: context.host } : {}
+        ...context.host !== DEFAULT_HOST ? { host: context.host } : {}
       },
       target.name,
       version3,
@@ -99938,7 +100222,7 @@ function planPreview(input2) {
     if (!trigger.manual && !trigger.labels.includes(config2.preview.label)) {
       return skip(
         "no-label",
-        words.host === "gitlab" ? `${prLabel(trigger.number)} doesn't have the ${code(config2.preview.label)} label: add the label and push, or start the manual preview job.` : `${prLabel(trigger.number)} doesn't have the ${code(config2.preview.label)} label: add it to build a preview.`
+        `${prLabel(trigger.number)} doesn't have the ${code(config2.preview.label)} label: ${forgeHints(words.host).previewAddLabel}`
       );
     }
     if (trigger.action === "labeled" && trigger.label !== void 0 && trigger.label !== config2.preview.label) {
@@ -100474,17 +100758,17 @@ function jobStatus(job) {
       return "pending";
   }
 }
-function findTargetJob(jobs, target, host = "github") {
-  const pattern = host === "gitlab" ? new RegExp(`^(?:preview-|build-)?${escapeRegExp(target)}$`, "i") : new RegExp(`^(?:.* / )?(?:Preview |Build )?${escapeRegExp(target)}$`, "i");
+function findTargetJob(jobs, target, ci = hostProfile(DEFAULT_HOST).ci) {
+  const pattern = ci === "gitlab-ci" ? new RegExp(`^(?:preview-|build-)?${escapeRegExp(target)}$`, "i") : new RegExp(`^(?:.* / )?(?:Preview |Build )?${escapeRegExp(target)}$`, "i");
   return jobs.filter((job) => pattern.test(job.name.trim())).at(-1);
 }
 function unknownResults(targets) {
   return Object.fromEntries(targets.map((name) => [name, { status: "unknown" }]));
 }
-function targetResults(plan, jobs, host = "github") {
+function targetResults(plan, jobs, ci = hostProfile(DEFAULT_HOST).ci) {
   const results = {};
   for (const name of plan.matrix) {
-    const job = findTargetJob(jobs, name, host);
+    const job = findTargetJob(jobs, name, ci);
     results[name] = job ? { status: jobStatus(job), ...job.url ? { jobUrl: job.url } : {} } : { status: "unknown" };
   }
   return results;
@@ -100493,7 +100777,7 @@ async function listRunJobs(context, forge, runId) {
   try {
     return await forge.listJobs(runId);
   } catch (error63) {
-    if (!context.fallbackForge || context.host === "gitlab") throw error63;
+    if (!context.fallbackForge || !ciProfile(ciSystemOf(context)).fallbackListsJobs) throw error63;
     context.log.warn(
       `Couldn't list the jobs with the App token (${errorMessage(error63)}); trying GITHUB_TOKEN`
     );
@@ -100516,7 +100800,31 @@ async function branchOnlyChangesets(context, sha, files) {
   }
   return { baseChangesetPaths: files.map((f) => f.path).filter((p) => !added.has(p)) };
 }
+var LEFTOVER_GITLAB_JOB = "launchset-preview-comment";
+function leftoverGitLabJob(context) {
+  const { env } = context;
+  const ci = ciSystemOf(context);
+  if (ci !== "gitlab-ci" || ciFromEnv(env) !== ci) return void 0;
+  if (env.CI_JOB_NAME !== LEFTOVER_GITLAB_JOB || env.CI_PIPELINE_SOURCE === "parent_pipeline") {
+    return void 0;
+  }
+  return `This job is left over from an older .gitlab/launchset.yml: the job ${LEFTOVER_GITLAB_JOB} at the end of the preview's child pipeline posts the result now, also for a preview started from the manual job. Remove the job ${LEFTOVER_GITLAB_JOB} from .gitlab/launchset.yml.`;
+}
 async function previewComment(context, options) {
+  const leftover = leftoverGitLabJob(context);
+  if (leftover) {
+    context.log.warn(leftover);
+    return {
+      ok: true,
+      outputs: {},
+      summary: renderSummary({
+        title: "launchset preview: reported by the child pipeline",
+        notices: [leftover]
+      }),
+      lines: [leftover],
+      data: { kind: "none", results: {}, unmatched: [] }
+    };
+  }
   if (options.plan.trim() === "") {
     const reason = "No preview plan was passed: the preview was skipped, or the plan job failed (see its log).";
     return {
@@ -100546,7 +100854,7 @@ async function previewComment(context, options) {
     notes.push(`The ${hints.runName} id is unknown, so the per-target results can't be read.`);
   } else {
     try {
-      results = targetResults(plan, await listRunJobs(context, forge, runId), context.host);
+      results = targetResults(plan, await listRunJobs(context, forge, runId), ciSystemOf(context));
       listed = true;
     } catch (error63) {
       context.log.warn(`Couldn't list the jobs of run ${runId}: ${errorMessage(error63)}`);
