@@ -92999,6 +92999,7 @@ async function findConfigFile(dir) {
   }
   return join2(root, found[0]);
 }
+var CONFIG_MODULES = ["launchset", "@demonsters/launchset"];
 async function readConfigFile(file2) {
   const name = file2.split(/[\\/]/).at(-1) ?? file2;
   if (file2.endsWith(".json")) {
@@ -93021,8 +93022,11 @@ async function readConfigFile(file2) {
     // The raw namespace, so a missing default export can be told apart from a config.
     interopDefault: false,
     // Configs import `defineConfig` from the package; this works even where the package
-    // isn't installed (the bundled GitHub Action).
-    virtualModules: { "@demonsters/launchset": { defineConfig, default: { defineConfig } } }
+    // isn't installed (the bundled GitHub Action). `@demonsters/launchset` is the package's
+    // old name, which older configs still import.
+    virtualModules: Object.fromEntries(
+      CONFIG_MODULES.map((name2) => [name2, { defineConfig, default: { defineConfig } }])
+    )
   });
   let mod;
   try {
@@ -96351,7 +96355,7 @@ function commitsWithoutChangesetWarning(commits, since) {
     "",
     ...lines,
     "",
-    "Add a changeset (`npx @demonsters/launchset add`) to release them, or `--empty` if they need no release."
+    "Add a changeset (`npx launchset add`) to release them, or `--empty` if they need no release."
   ].join("\n");
 }
 function assertPlainRoot(version3, file2) {
@@ -96886,7 +96890,7 @@ function howToAdd(docsUrl, dir) {
     "Add one with:",
     "",
     "```sh",
-    "npx @demonsters/launchset add",
+    "npx launchset add",
     "```",
     "",
     `or write a file like \`${dir}/brave-lions-sing.md\` by hand:`,
@@ -102046,3 +102050,28 @@ async function main() {
   }
 }
 await main();
+/*! Bundled license information:
+
+undici/lib/web/fetch/body.js:
+  (*! formdata-polyfill. MIT License. Jimmy Wärting <https://jimmy.warting.se/opensource> *)
+
+undici/lib/web/websocket/frame.js:
+  (*! ws. MIT License. Einar Otto Stangvik <einaros@gmail.com> *)
+
+content-type/dist/index.js:
+  (*!
+   * content-type
+   * Copyright(c) 2015 Douglas Christopher Wilson
+   * MIT Licensed
+   *)
+
+@octokit/request-error/dist-src/index.js:
+  (* v8 ignore else -- @preserve -- Bug with vitest coverage where it sees an else branch that doesn't exist *)
+
+@octokit/request/dist-bundle/index.js:
+  (* v8 ignore next -- @preserve *)
+  (* v8 ignore else -- @preserve *)
+
+@octokit/graphql/dist-bundle/index.js:
+  (* v8 ignore if -- @preserve *)
+*/

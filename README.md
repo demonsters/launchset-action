@@ -10,7 +10,7 @@ This repository only holds the compiled action (`action.yml` and `dist/index.js`
 
 ## Usage
 
-The easiest way to get the workflows is `npx @demonsters/launchset init`, which writes them for your repo. They call the action like this:
+The easiest way to get the workflows is `npx launchset init`, which writes them for your repo. They call the action like this:
 
 ```yaml
 jobs:
@@ -104,4 +104,4 @@ Which outputs a command sets is listed in the description. Outputs that don't ap
 
 ## License
 
-All rights reserved, demonsters. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). The bundle includes third-party open source packages under their own licenses: see [dist/THIRD_PARTY_LICENSES.txt](dist/THIRD_PARTY_LICENSES.txt).
