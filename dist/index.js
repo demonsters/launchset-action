@@ -90265,7 +90265,14 @@ function resolveTarget(name, target, root) {
       return { ...target, ...common };
   }
 }
-var SEMVER_WITH_PREVIEWS = `the "semver" build-number strategy can't be used while previews are enabled (previews and the real release would compete for the same numbers). Use "timestamp", or set preview: false`;
+function previewBuildTargets(config2) {
+  if (!config2.preview.enabled) return /* @__PURE__ */ new Set();
+  const lists = [config2.preview.targets, ...config2.preview.branches.map((b) => b.targets)];
+  if (lists.includes("all")) return new Set(Object.keys(config2.targets));
+  return new Set(lists.flatMap((list) => Array.isArray(list) ? list : []));
+}
+var SEMVER_ROOT_WITH_PREVIEWS = `the "semver" build-number strategy can't be the repo-wide strategy while previews are enabled: previews get their build number from it, and a preview of 1.5.0 and the real 1.5.0 would compete for the same numbers. Use "timestamp" here and set buildNumber: { strategy: "semver" } on the targets previews don't build, or set preview: false`;
+var semverPreviewTarget = (name) => `target "${name}" can't use the "semver" build-number strategy: previews build it, and a preview of 1.5.0 and the real 1.5.0 would compete for the same numbers. Take "${name}" out of preview.targets (and the targets of preview.branches), use "timestamp", or set preview: false`;
 function semanticIssues(config2) {
   const issues = [];
   const names = Object.keys(config2.targets);
@@ -90298,13 +90305,18 @@ function semanticIssues(config2) {
       message: `pattern "${config2.maintenanceBranches}" matches the base branch "${config2.baseBranch}"`
     });
   }
-  if (config2.preview.enabled && config2.buildNumber.strategy === "semver") {
-    issues.push({ path: "buildNumber.strategy", message: SEMVER_WITH_PREVIEWS });
+  const rootSemver = config2.preview.enabled && config2.buildNumber.strategy === "semver";
+  if (rootSemver) {
+    issues.push({ path: "buildNumber.strategy", message: SEMVER_ROOT_WITH_PREVIEWS });
   }
+  const previewBuilt = previewBuildTargets(config2);
   for (const target of Object.values(config2.targets)) {
     const base = `targets.${target.name}`;
-    if (config2.preview.enabled && target.buildNumber.strategy === "semver" && config2.buildNumber.strategy !== "semver") {
-      issues.push({ path: `${base}.buildNumber.strategy`, message: SEMVER_WITH_PREVIEWS });
+    if (!rootSemver && previewBuilt.has(target.name) && target.buildNumber.strategy === "semver") {
+      issues.push({
+        path: `${base}.buildNumber.strategy`,
+        message: semverPreviewTarget(target.name)
+      });
     }
     target.files.forEach((file2, index) => {
       if (file2.kind === "image" && target.type !== "docker") {
@@ -96350,6 +96362,7 @@ function basePlan({ input: input2, mode, version: version3, maintenance }) {
 }
 function buildPlan(input2, fields) {
   const plan = basePlan(fields);
+  const run = fields.attempt !== void 0 ? { ...input2.run, attempt: fields.attempt } : input2.run;
   plan.releaseSha = fields.releaseSha;
   plan.tag = releaseTag(input2.config.tags, fields.version);
   plan.matrix = fields.matrix;
@@ -96359,7 +96372,7 @@ function buildPlan(input2, fields) {
     baseVersion: fields.version,
     maintenance: fields.tagMaintenance ?? fields.maintenance,
     now: input2.now,
-    ...input2.run ? { run: input2.run } : {},
+    ...run ? { run } : {},
     sha: fields.releaseSha,
     createdAt: plan.createdAt,
     markerTemplate: { tags: input2.config.tags },
@@ -96369,7 +96382,7 @@ function buildPlan(input2, fields) {
   plan.buildNumber = fields.buildNumber !== void 0 ? fields.buildNumber : planBuildNumber(input2.config, plan, {
     now: input2.now,
     version: fields.version,
-    ...input2.run ? { run: input2.run } : {},
+    ...run ? { run } : {},
     ...input2.host ? { host: input2.host } : {}
   });
   return plan;
@@ -96400,6 +96413,15 @@ function planRelease(input2) {
       `the version input (${event.version}) only works together with the target input`,
       {
         hint: "To ship a manual target, set both target and version. To retry the current release, start the workflow without inputs."
+      }
+    );
+  }
+  if (event.kind === "dispatch" && event.attempt !== void 0) {
+    throw new LaunchsetError(
+      "attempt-without-target",
+      `the attempt input (${event.attempt}) only works together with the target input`,
+      {
+        hint: "To ship a manual target again with a new build number, set target and attempt. To retry the current release, start the workflow without inputs."
       }
     );
   }
@@ -96570,6 +96592,7 @@ function planShip(input2, targetName, event) {
       }
     );
   }
+  if (event.attempt !== void 0) checkShipAttempt(targetName, target.buildNumber, event.attempt);
   let version3;
   if (event.version) {
     version3 = normalizeVersionInput(event.version);
@@ -96618,7 +96641,28 @@ function planShip(input2, targetName, event) {
     }
     notices.push(`Shipping ${version3} although ${targetName} already shipped ${highest} (force).`);
   }
-  return finish(buildShipPlan(input2, targetName, version3), { notices });
+  const options = event.attempt !== void 0 ? { attempt: event.attempt } : {};
+  return finish(buildShipPlan(input2, targetName, version3, options), { notices });
+}
+function checkShipAttempt(targetName, buildNumber, attempt) {
+  if (buildNumber.strategy !== "semver") {
+    throw new LaunchsetError(
+      "attempt-not-semver",
+      `${targetName} uses the "${buildNumber.strategy}" build-number strategy, which has no attempt: the attempt only sets the last two digits of a "semver" build number`,
+      {
+        hint: buildNumber.strategy === "timestamp" ? "Leave the attempt out: every timestamp build number is new anyway." : "Leave the attempt out."
+      }
+    );
+  }
+  if (!Number.isSafeInteger(attempt) || attempt < 1 || attempt > 99) {
+    throw new LaunchsetError(
+      "invalid-build-number",
+      `attempt ${attempt}: the "semver" build-number strategy supports attempts 1 to 99`,
+      {
+        hint: "Pass a whole number from 1 to 99 (one higher than the last upload of this version)."
+      }
+    );
+  }
 }
 function buildShipPlan(input2, targetName, version3, options = {}) {
   const tag2 = releaseTag(input2.config.tags, version3);
@@ -96639,7 +96683,8 @@ function buildShipPlan(input2, targetName, version3, options = {}) {
     tagMaintenance: maintenance || notLatest,
     matrix: [targetName],
     releaseSha,
-    ...options.buildNumber !== void 0 ? { buildNumber: options.buildNumber } : {}
+    ...options.buildNumber !== void 0 ? { buildNumber: options.buildNumber } : {},
+    ...options.attempt !== void 0 ? { attempt: options.attempt } : {}
   });
   plan.distTag = distTag({ channel: "release", version: version3, maintenance: maintenance || notLatest });
   return plan;
@@ -97198,6 +97243,7 @@ function dispatchInputs(env) {
   }
   if (env.LAUNCHSET_RELEASE_VERSION) inputs.version = env.LAUNCHSET_RELEASE_VERSION;
   if (env.LAUNCHSET_FORCE) inputs.force = env.LAUNCHSET_FORCE;
+  if (env.LAUNCHSET_ATTEMPT) inputs.attempt = env.LAUNCHSET_ATTEMPT;
   return inputs;
 }
 var MANUAL_SOURCES = /* @__PURE__ */ new Set(["web", "api", "trigger", "pipeline", "chat"]);
@@ -99152,7 +99198,7 @@ async function tryResolveBranch(context) {
 function releaseEventFor(context, options = {}) {
   if (options.event) return options.event;
   const dispatch2 = context.ci.event?.kind === "dispatch";
-  if (!dispatch2 && !options.target) return { kind: "push" };
+  if (!dispatch2 && !options.target && options.attempt === void 0) return { kind: "push" };
   const inputs = dispatch2 ? context.ci.event?.inputs ?? {} : {};
   const event = { kind: "dispatch" };
   const target = options.target || inputs.target;
@@ -99161,7 +99207,20 @@ function releaseEventFor(context, options = {}) {
   if (version3) event.version = version3;
   const force = options.force ?? (inputs.force === "true" ? true : void 0);
   if (force) event.force = true;
+  const attempt = options.attempt ?? attemptInput(inputs.attempt);
+  if (attempt !== void 0) event.attempt = attempt;
   return event;
+}
+function attemptInput(value2) {
+  const text2 = value2?.trim();
+  if (!text2) return void 0;
+  if (!/^\d+$/.test(text2)) {
+    throw new LaunchsetError(
+      "invalid-build-number",
+      `the attempt input must be a whole number from 1 to 99, got "${text2}"`
+    );
+  }
+  return Number(text2);
 }
 async function rootVersionReader(context) {
   return versionReader(context.git, await versionFilePath(context));
@@ -100263,7 +100322,17 @@ function planPreview(input2) {
       targets = trigger.targets.includes("all") ? "all" : trigger.targets;
     }
   }
-  const matrix = resolveTargets(config2, targets);
+  const semverTargets = resolveTargets(config2, targets).filter(
+    (name) => config2.targets[name]?.buildNumber.strategy === "semver"
+  );
+  if (semverTargets.length > 0 && targets !== "all") {
+    throw new LaunchsetError(
+      "semver-preview",
+      `${joinWords(semverTargets.map(code))} ${semverTargets.length === 1 ? "uses" : "use"} the "semver" build-number strategy, so ${semverTargets.length === 1 ? "it" : "they"} can't be previewed: a preview of 1.5.0 and the real 1.5.0 would compete for the same build numbers`,
+      { hint: 'Leave it out of the targets input, or give it the "timestamp" strategy.' }
+    );
+  }
+  const matrix = resolveTargets(config2, targets).filter((name) => !semverTargets.includes(name));
   const next = previewBaseVersion({
     current: input2.version,
     bump: releaseBump(input2.changesets),
@@ -100355,6 +100424,11 @@ function planPreview(input2) {
     ...input2.host ? { host: input2.host } : {}
   });
   const notices = [];
+  if (semverTargets.length > 0) {
+    notices.push(
+      `Not building ${joinWords(semverTargets.map(code))}: the "semver" build-number strategy can't be used for previews.`
+    );
+  }
   if (maintenance && trigger.kind === "dispatch") {
     notices.push(`${input2.branch} is a maintenance branch: this preview was started by hand.`);
   }
