@@ -90661,10 +90661,13 @@ function templateMatcher(template, target) {
   let regex = matcherCache.get(key);
   if (!regex) {
     const targetSource = target === void 0 ? `(?<target>${TARGET_SOURCE})` : `(?<target>${escapeRegExp(target)})`;
+    const seen = /* @__PURE__ */ new Set();
     const source = template.split(/(\{version\}|\{target\})/).map((part) => {
-      if (part === "{version}") return `(?<version>${VERSION_SOURCE})`;
-      if (part === "{target}") return targetSource;
-      return escapeRegExp(part);
+      if (part !== "{version}" && part !== "{target}") return escapeRegExp(part);
+      const name = part.slice(1, -1);
+      if (seen.has(name)) return `\\k<${name}>`;
+      seen.add(name);
+      return name === "version" ? `(?<version>${VERSION_SOURCE})` : targetSource;
     }).join("");
     regex = new RegExp(`^${source}$`);
     matcherCache.set(key, regex);
