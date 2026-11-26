@@ -69924,7 +69924,8 @@ function computeBuildNumber(config2, context) {
           { hint: "Use an epoch in the past (the default is 2020-01-01T00:00:00Z)." }
         );
       }
-      return positive(seconds + config2.offset, "timestamp");
+      const units = config2.unit === "minute" ? Math.floor(seconds / 60) : seconds;
+      return positive(units + config2.offset, "timestamp");
     }
     case "run-number": {
       const run = context.runNumber;
@@ -75752,8 +75753,8 @@ var error4 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const maxValue = Number(issue3.maximum);
-          const unit = getBelarusianPlural(maxValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
-          return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u0432\u044F\u043B\u0456\u043A\u0456: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u044D\u043D\u043D\u0435"} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 ${sizing.verb} ${adj}${issue3.maximum.toString()} ${unit}`;
+          const unit2 = getBelarusianPlural(maxValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
+          return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u0432\u044F\u043B\u0456\u043A\u0456: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u044D\u043D\u043D\u0435"} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 ${sizing.verb} ${adj}${issue3.maximum.toString()} ${unit2}`;
         }
         return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u0432\u044F\u043B\u0456\u043A\u0456: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u044D\u043D\u043D\u0435"} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 \u0431\u044B\u0446\u044C ${adj}${issue3.maximum.toString()}`;
       }
@@ -75762,8 +75763,8 @@ var error4 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const minValue = Number(issue3.minimum);
-          const unit = getBelarusianPlural(minValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
-          return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u043C\u0430\u043B\u044B: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 ${sizing.verb} ${adj}${issue3.minimum.toString()} ${unit}`;
+          const unit2 = getBelarusianPlural(minValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
+          return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u043C\u0430\u043B\u044B: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 ${sizing.verb} ${adj}${issue3.minimum.toString()} ${unit2}`;
         }
         return `\u0417\u0430\u043D\u0430\u0434\u0442\u0430 \u043C\u0430\u043B\u044B: \u0447\u0430\u043A\u0430\u043B\u0430\u0441\u044F, \u0448\u0442\u043E ${issue3.origin} \u043F\u0430\u0432\u0456\u043D\u043D\u0430 \u0431\u044B\u0446\u044C ${adj}${issue3.minimum.toString()}`;
       }
@@ -78390,8 +78391,8 @@ var error25 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const maxValue = Number(issue3.maximum);
-          const unit = getArmenianPlural(maxValue, sizing.unit.one, sizing.unit.many);
-          return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0574\u0565\u056E \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin ?? "\u0561\u0580\u056A\u0565\u0584")} \u056F\u0578\u0582\u0576\u0565\u0576\u0561 ${adj}${issue3.maximum.toString()} ${unit}`;
+          const unit2 = getArmenianPlural(maxValue, sizing.unit.one, sizing.unit.many);
+          return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0574\u0565\u056E \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin ?? "\u0561\u0580\u056A\u0565\u0584")} \u056F\u0578\u0582\u0576\u0565\u0576\u0561 ${adj}${issue3.maximum.toString()} ${unit2}`;
         }
         return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0574\u0565\u056E \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin ?? "\u0561\u0580\u056A\u0565\u0584")} \u056C\u056B\u0576\u056B ${adj}${issue3.maximum.toString()}`;
       }
@@ -78400,8 +78401,8 @@ var error25 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const minValue = Number(issue3.minimum);
-          const unit = getArmenianPlural(minValue, sizing.unit.one, sizing.unit.many);
-          return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0583\u0578\u0584\u0580 \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin)} \u056F\u0578\u0582\u0576\u0565\u0576\u0561 ${adj}${issue3.minimum.toString()} ${unit}`;
+          const unit2 = getArmenianPlural(minValue, sizing.unit.one, sizing.unit.many);
+          return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0583\u0578\u0584\u0580 \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin)} \u056F\u0578\u0582\u0576\u0565\u0576\u0561 ${adj}${issue3.minimum.toString()} ${unit2}`;
         }
         return `\u0549\u0561\u0583\u0561\u0566\u0561\u0576\u0581 \u0583\u0578\u0584\u0580 \u0561\u0580\u056A\u0565\u0584\u2024 \u057D\u057A\u0561\u057D\u057E\u0578\u0582\u0574 \u0567, \u0578\u0580 ${withDefiniteArticle(issue3.origin)} \u056C\u056B\u0576\u056B ${adj}${issue3.minimum.toString()}`;
       }
@@ -79315,18 +79316,18 @@ var error33 = () => {
         const adj = issue3.inclusive ? "\uC774\uD558" : "\uBBF8\uB9CC";
         const suffix = adj === "\uBBF8\uB9CC" ? "\uC774\uC5B4\uC57C \uD569\uB2C8\uB2E4" : "\uC5EC\uC57C \uD569\uB2C8\uB2E4";
         const sizing = getSizing(issue3.origin);
-        const unit = sizing?.unit ?? "\uC694\uC18C";
+        const unit2 = sizing?.unit ?? "\uC694\uC18C";
         if (sizing)
-          return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4: ${issue3.maximum.toString()}${unit} ${adj}${suffix}`;
+          return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4: ${issue3.maximum.toString()}${unit2} ${adj}${suffix}`;
         return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4: ${issue3.maximum.toString()} ${adj}${suffix}`;
       }
       case "too_small": {
         const adj = issue3.inclusive ? "\uC774\uC0C1" : "\uCD08\uACFC";
         const suffix = adj === "\uC774\uC0C1" ? "\uC774\uC5B4\uC57C \uD569\uB2C8\uB2E4" : "\uC5EC\uC57C \uD569\uB2C8\uB2E4";
         const sizing = getSizing(issue3.origin);
-        const unit = sizing?.unit ?? "\uC694\uC18C";
+        const unit2 = sizing?.unit ?? "\uC694\uC18C";
         if (sizing) {
-          return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uC791\uC2B5\uB2C8\uB2E4: ${issue3.minimum.toString()}${unit} ${adj}${suffix}`;
+          return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uC791\uC2B5\uB2C8\uB2E4: ${issue3.minimum.toString()}${unit2} ${adj}${suffix}`;
         }
         return `${issue3.origin ?? "\uAC12"}\uC774 \uB108\uBB34 \uC791\uC2B5\uB2C8\uB2E4: ${issue3.minimum.toString()} ${adj}${suffix}`;
       }
@@ -81139,8 +81140,8 @@ var error47 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const maxValue = Number(issue3.maximum);
-          const unit = getRussianPlural(maxValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
-          return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0431\u043E\u043B\u044C\u0448\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435"} \u0431\u0443\u0434\u0435\u0442 \u0438\u043C\u0435\u0442\u044C ${adj}${issue3.maximum.toString()} ${unit}`;
+          const unit2 = getRussianPlural(maxValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
+          return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0431\u043E\u043B\u044C\u0448\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435"} \u0431\u0443\u0434\u0435\u0442 \u0438\u043C\u0435\u0442\u044C ${adj}${issue3.maximum.toString()} ${unit2}`;
         }
         return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0431\u043E\u043B\u044C\u0448\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin ?? "\u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435"} \u0431\u0443\u0434\u0435\u0442 ${adj}${issue3.maximum.toString()}`;
       }
@@ -81149,8 +81150,8 @@ var error47 = () => {
         const sizing = getSizing(issue3.origin);
         if (sizing) {
           const minValue = Number(issue3.minimum);
-          const unit = getRussianPlural(minValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
-          return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin} \u0431\u0443\u0434\u0435\u0442 \u0438\u043C\u0435\u0442\u044C ${adj}${issue3.minimum.toString()} ${unit}`;
+          const unit2 = getRussianPlural(minValue, sizing.unit.one, sizing.unit.few, sizing.unit.many);
+          return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin} \u0431\u0443\u0434\u0435\u0442 \u0438\u043C\u0435\u0442\u044C ${adj}${issue3.minimum.toString()} ${unit2}`;
         }
         return `\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u043E\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435: \u043E\u0436\u0438\u0434\u0430\u043B\u043E\u0441\u044C, \u0447\u0442\u043E ${issue3.origin} \u0431\u0443\u0434\u0435\u0442 ${adj}${issue3.minimum.toString()}`;
       }
@@ -89765,15 +89766,19 @@ var BUILD_NUMBER_STRATEGIES = ["timestamp", "run-number", "semver", "eas"];
 var strategy = external_exports.enum(BUILD_NUMBER_STRATEGIES);
 var epoch = external_exports.iso.datetime({ offset: true, message: "expected an ISO 8601 date-time" });
 var offset = external_exports.number().int().min(0, "expected an integer >= 0");
+var TIMESTAMP_UNITS = ["second", "minute"];
+var unit = external_exports.enum(TIMESTAMP_UNITS);
 var buildNumberSchema = external_exports.strictObject({
   strategy: strategy.default("timestamp"),
   epoch: epoch.default("2020-01-01T00:00:00Z"),
-  offset: offset.default(0)
+  offset: offset.default(0),
+  unit: unit.optional()
 });
 var buildNumberOverrideSchema = external_exports.strictObject({
   strategy: strategy.optional(),
   epoch: epoch.optional(),
-  offset: offset.optional()
+  offset: offset.optional(),
+  unit: unit.optional()
 });
 var jsonFileSchema = external_exports.strictObject({
   path: nonEmpty,
@@ -90237,6 +90242,8 @@ function resolveTarget(name, target, root) {
     epoch: target.buildNumber?.epoch ?? root.epoch,
     offset: target.buildNumber?.offset ?? root.offset
   };
+  const unit2 = target.buildNumber?.unit ?? root.unit;
+  if (unit2 !== void 0) buildNumber.unit = unit2;
   const common = { name, release: target.release, buildNumber, files: target.files };
   switch (target.type) {
     case "docker": {
@@ -90273,6 +90280,21 @@ function previewBuildTargets(config2) {
 }
 var SEMVER_ROOT_WITH_PREVIEWS = `the "semver" build-number strategy can't be the repo-wide strategy while previews are enabled: previews get their build number from it, and a preview of 1.5.0 and the real 1.5.0 would compete for the same numbers. Use "timestamp" here and set buildNumber: { strategy: "semver" } on the targets previews don't build, or set preview: false`;
 var semverPreviewTarget = (name) => `target "${name}" can't use the "semver" build-number strategy: previews build it, and a preview of 1.5.0 and the real 1.5.0 would compete for the same numbers. Take "${name}" out of preview.targets (and the targets of preview.branches), use "timestamp", or set preview: false`;
+function unitIssues(data) {
+  const issues = [];
+  const message2 = (strategy2) => `"unit" only applies to the "timestamp" build-number strategy, not "${strategy2}": remove it`;
+  if (data.buildNumber.unit !== void 0 && data.buildNumber.strategy !== "timestamp") {
+    issues.push({ path: "buildNumber.unit", message: message2(data.buildNumber.strategy) });
+  }
+  for (const [name, target] of Object.entries(data.targets)) {
+    const own2 = target.buildNumber;
+    const strategy2 = own2?.strategy ?? data.buildNumber.strategy;
+    if (own2?.unit !== void 0 && strategy2 !== "timestamp") {
+      issues.push({ path: `targets.${name}.buildNumber.unit`, message: message2(strategy2) });
+    }
+  }
+  return issues;
+}
 function semanticIssues(config2) {
   const issues = [];
   const names = Object.keys(config2.targets);
@@ -90471,7 +90493,7 @@ function resolveConfig(input2, options = {}) {
     targets[name] = resolveTarget(name, target, data.buildNumber);
   }
   const config2 = { ...data, preview, targets };
-  const issues = semanticIssues(config2);
+  const issues = [...semanticIssues(config2), ...unitIssues(data)];
   config2.preview.branches.forEach((entry, index) => {
     if (entry.prerelease && matchBranch(config2.baseBranch, entry.branch)) {
       issues.push({
@@ -94262,7 +94284,7 @@ function indentUnit(text2) {
 }
 function insertProperty(text2, obj, name, value2) {
   const eol = detectEol(text2);
-  const unit = indentUnit(text2);
+  const unit2 = indentUnit(text2);
   const key = JSON.stringify(name);
   const last = obj.children?.at(-1);
   const multiline = text2.slice(obj.offset, obj.offset + obj.length).includes("\n");
@@ -94276,7 +94298,7 @@ function insertProperty(text2, obj, name, value2) {
   const end = obj.offset + obj.length;
   if (!text2.includes("\n")) return { start, end, text: `{${key}: ${value2(null)}}` };
   const outer = indentAt(text2, obj.offset);
-  const inner = outer + unit;
+  const inner = outer + unit2;
   return { start, end, text: `{${eol}${inner}${key}: ${value2(inner)}${eol}${outer}}` };
 }
 function createExpoStamper(platform2) {
