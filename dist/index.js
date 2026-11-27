@@ -5487,7 +5487,7 @@ var require_body = __commonJS({
       } else {
         stream = new ReadableStream({
           async pull(controller) {
-            const buffer = typeof source === "string" ? textEncoder.encode(source) : source;
+            const buffer = typeof source2 === "string" ? textEncoder.encode(source2) : source2;
             if (buffer.byteLength) {
               controller.enqueue(buffer);
             }
@@ -5500,19 +5500,19 @@ var require_body = __commonJS({
       }
       assert2(isReadableStreamLike(stream));
       let action = null;
-      let source = null;
+      let source2 = null;
       let length = null;
       let type = null;
       if (typeof object2 === "string") {
-        source = object2;
+        source2 = object2;
         type = "text/plain;charset=UTF-8";
       } else if (object2 instanceof URLSearchParams) {
-        source = object2.toString();
+        source2 = object2.toString();
         type = "application/x-www-form-urlencoded;charset=UTF-8";
       } else if (isArrayBuffer(object2)) {
-        source = new Uint8Array(object2.slice());
+        source2 = new Uint8Array(object2.slice());
       } else if (ArrayBuffer.isView(object2)) {
-        source = new Uint8Array(object2.buffer.slice(object2.byteOffset, object2.byteOffset + object2.byteLength));
+        source2 = new Uint8Array(object2.buffer.slice(object2.byteOffset, object2.byteOffset + object2.byteLength));
       } else if (util.isFormDataLike(object2)) {
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
@@ -5551,7 +5551,7 @@ Content-Type: ${value2.type || "application/octet-stream"}\r
         if (hasUnknownSizeValue) {
           length = null;
         }
-        source = object2;
+        source2 = object2;
         action = async function* () {
           for (const part of blobParts) {
             if (part.stream) {
@@ -5563,7 +5563,7 @@ Content-Type: ${value2.type || "application/octet-stream"}\r
         };
         type = `multipart/form-data; boundary=${boundary}`;
       } else if (isBlobLike(object2)) {
-        source = object2;
+        source2 = object2;
         length = object2.size;
         if (object2.type) {
           type = object2.type;
@@ -5579,8 +5579,8 @@ Content-Type: ${value2.type || "application/octet-stream"}\r
         }
         stream = object2 instanceof ReadableStream ? object2 : ReadableStreamFrom(object2);
       }
-      if (typeof source === "string" || util.isBuffer(source)) {
-        length = Buffer.byteLength(source);
+      if (typeof source2 === "string" || util.isBuffer(source2)) {
+        length = Buffer.byteLength(source2);
       }
       if (action != null) {
         let iterator2;
@@ -5611,7 +5611,7 @@ Content-Type: ${value2.type || "application/octet-stream"}\r
           type: "bytes"
         });
       }
-      const body = { stream, source, length };
+      const body = { stream, source: source2, length };
       return [body, type];
     }
     function safelyExtractBody(object2, keepalive = false) {
@@ -16628,7 +16628,7 @@ var require_events = __commonJS({
         }
         return this.#eventInit.ports;
       }
-      initMessageEvent(type, bubbles = false, cancelable = false, data = null, origin = "", lastEventId = "", source = null, ports = []) {
+      initMessageEvent(type, bubbles = false, cancelable = false, data = null, origin = "", lastEventId = "", source2 = null, ports = []) {
         webidl.brandCheck(this, _MessageEvent);
         webidl.argumentLengthCheck(arguments, 1, "MessageEvent.initMessageEvent");
         return new _MessageEvent(type, {
@@ -16637,7 +16637,7 @@ var require_events = __commonJS({
           data,
           origin,
           lastEventId,
-          source,
+          source: source2,
           ports
         });
       }
@@ -19179,9 +19179,9 @@ var require_identity = __commonJS({
     var NODE_TYPE = /* @__PURE__ */ Symbol.for("yaml.node.type");
     var isAlias2 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === ALIAS;
     var isDocument = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === DOC;
-    var isMap3 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === MAP;
+    var isMap4 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === MAP;
     var isPair = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === PAIR;
-    var isScalar3 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === SCALAR;
+    var isScalar4 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === SCALAR;
     var isSeq2 = (node2) => !!node2 && typeof node2 === "object" && node2[NODE_TYPE] === SEQ;
     function isCollection(node2) {
       if (node2 && typeof node2 === "object")
@@ -19203,7 +19203,7 @@ var require_identity = __commonJS({
         }
       return false;
     }
-    var hasAnchor = (node2) => (isScalar3(node2) || isCollection(node2)) && !!node2.anchor;
+    var hasAnchor = (node2) => (isScalar4(node2) || isCollection(node2)) && !!node2.anchor;
     exports.ALIAS = ALIAS;
     exports.DOC = DOC;
     exports.MAP = MAP;
@@ -19215,10 +19215,10 @@ var require_identity = __commonJS({
     exports.isAlias = isAlias2;
     exports.isCollection = isCollection;
     exports.isDocument = isDocument;
-    exports.isMap = isMap3;
+    exports.isMap = isMap4;
     exports.isNode = isNode;
     exports.isPair = isPair;
-    exports.isScalar = isScalar3;
+    exports.isScalar = isScalar4;
     exports.isSeq = isSeq2;
   }
 });
@@ -19479,26 +19479,26 @@ var require_directives = __commonJS({
        * @returns Resolved tag, which may also be the non-specific tag `'!'` or a
        *   `'!local'` tag, or `null` if unresolvable.
        */
-      tagName(source, onError) {
-        if (source === "!")
+      tagName(source2, onError) {
+        if (source2 === "!")
           return "!";
-        if (source[0] !== "!") {
-          onError(`Not a valid tag: ${source}`);
+        if (source2[0] !== "!") {
+          onError(`Not a valid tag: ${source2}`);
           return null;
         }
-        if (source[1] === "<") {
-          const verbatim = source.slice(2, -1);
+        if (source2[1] === "<") {
+          const verbatim = source2.slice(2, -1);
           if (verbatim === "!" || verbatim === "!!") {
-            onError(`Verbatim tags aren't resolved, so ${source} is invalid.`);
+            onError(`Verbatim tags aren't resolved, so ${source2} is invalid.`);
             return null;
           }
-          if (source[source.length - 1] !== ">")
+          if (source2[source2.length - 1] !== ">")
             onError("Verbatim tags must end with a >");
           return verbatim;
         }
-        const [, handle, suffix] = source.match(/^(.*!)([^!]*)$/s);
+        const [, handle, suffix] = source2.match(/^(.*!)([^!]*)$/s);
         if (!suffix)
-          onError(`The ${source} tag has no suffix`);
+          onError(`The ${source2} tag has no suffix`);
         const prefix = this.tags[handle];
         if (prefix) {
           try {
@@ -19509,8 +19509,8 @@ var require_directives = __commonJS({
           }
         }
         if (handle === "!")
-          return source;
-        onError(`Could not resolve tag: ${source}`);
+          return source2;
+        onError(`Could not resolve tag: ${source2}`);
         return null;
       }
       /**
@@ -19588,8 +19588,8 @@ var require_anchors = __commonJS({
       const sourceObjects = /* @__PURE__ */ new Map();
       let prevAnchors = null;
       return {
-        onAnchor: (source) => {
-          aliasObjects.push(source);
+        onAnchor: (source2) => {
+          aliasObjects.push(source2);
           prevAnchors ?? (prevAnchors = anchorNames(doc));
           const anchor2 = findNewAnchor(prefix, prevAnchors);
           prevAnchors.add(anchor2);
@@ -19601,13 +19601,13 @@ var require_anchors = __commonJS({
          * the nodes have been created.
          */
         setAnchors: () => {
-          for (const source of aliasObjects) {
-            const ref = sourceObjects.get(source);
+          for (const source2 of aliasObjects) {
+            const ref = sourceObjects.get(source2);
             if (typeof ref === "object" && ref.anchor && (identity.isScalar(ref.node) || identity.isCollection(ref.node))) {
               ref.node.anchor = ref.anchor;
             } else {
               const error63 = new Error("Failed to resolve repeated object (this should not happen)");
-              error63.source = source;
+              error63.source = source2;
               throw error63;
             }
           }
@@ -19753,9 +19753,9 @@ var require_Alias = __commonJS({
     var Node = require_Node();
     var toJS = require_toJS();
     var Alias = class extends Node.NodeBase {
-      constructor(source) {
+      constructor(source2) {
         super(identity.ALIAS);
-        this.source = source;
+        this.source = source2;
         Object.defineProperty(this, "tag", {
           set() {
             throw new Error("Alias nodes cannot have tags");
@@ -19816,12 +19816,12 @@ var require_Alias = __commonJS({
       toJSON(_arg, ctx) {
         if (!ctx)
           return { source: this.source };
-        const source = this.resolve(ctx.doc, ctx);
-        if (!source) {
+        const source2 = this.resolve(ctx.doc, ctx);
+        if (!source2) {
           const msg = `Unresolved alias (the anchor must be set before the alias): ${this.source}`;
           throw new ReferenceError(msg);
         }
-        return ctx.anchors.get(source).res;
+        return ctx.anchors.get(source2).res;
       }
       toString(ctx, _onComment, _onChompKeep) {
         const src = `*${this.source}`;
@@ -19839,8 +19839,8 @@ var require_Alias = __commonJS({
     };
     function getAliasCount(doc, node2, anchors2) {
       if (identity.isAlias(node2)) {
-        const source = node2.resolve(doc);
-        const anchor2 = anchors2 && source && anchors2.get(source);
+        const source2 = node2.resolve(doc);
+        const anchor2 = anchors2 && source2 && anchors2.get(source2);
         return anchor2 ? anchor2.count * anchor2.aliasCount : 0;
       } else if (identity.isCollection(node2)) {
         let count = 0;
@@ -20843,21 +20843,21 @@ var require_merge = __commonJS({
     };
     var isMergeKey = (ctx, key) => (merge3.identify(key) || identity.isScalar(key) && (!key.type || key.type === Scalar.Scalar.PLAIN) && merge3.identify(key.value)) && ctx?.doc.schema.tags.some((tag2) => tag2.tag === merge3.tag && tag2.default);
     function addMergeToJSMap(ctx, map2, value2) {
-      const source = resolveAliasValue(ctx, value2);
-      if (identity.isSeq(source))
-        for (const it of source.items)
+      const source2 = resolveAliasValue(ctx, value2);
+      if (identity.isSeq(source2))
+        for (const it of source2.items)
           mergeValue(ctx, map2, it);
-      else if (Array.isArray(source))
-        for (const it of source)
+      else if (Array.isArray(source2))
+        for (const it of source2)
           mergeValue(ctx, map2, it);
       else
-        mergeValue(ctx, map2, source);
+        mergeValue(ctx, map2, source2);
     }
     function mergeValue(ctx, map2, value2) {
-      const source = resolveAliasValue(ctx, value2);
-      if (!identity.isMap(source))
+      const source2 = resolveAliasValue(ctx, value2);
+      if (!identity.isMap(source2))
         throw new Error("Merge sources must be maps or map aliases");
-      const srcMap = source.toJSON(null, ctx, Map);
+      const srcMap = source2.toJSON(null, ctx, Map);
       for (const [key, value3] of srcMap) {
         if (map2 instanceof Map) {
           if (!map2.has(key))
@@ -21474,7 +21474,7 @@ var require_null = __commonJS({
       tag: "tag:yaml.org,2002:null",
       test: /^(?:~|[Nn]ull|NULL)?$/,
       resolve: () => new Scalar.Scalar(null),
-      stringify: ({ source }, ctx) => typeof source === "string" && nullTag.test.test(source) ? source : ctx.options.nullStr
+      stringify: ({ source: source2 }, ctx) => typeof source2 === "string" && nullTag.test.test(source2) ? source2 : ctx.options.nullStr
     };
     exports.nullTag = nullTag;
   }
@@ -21491,11 +21491,11 @@ var require_bool = __commonJS({
       tag: "tag:yaml.org,2002:bool",
       test: /^(?:[Tt]rue|TRUE|[Ff]alse|FALSE)$/,
       resolve: (str2) => new Scalar.Scalar(str2[0] === "t" || str2[0] === "T"),
-      stringify({ source, value: value2 }, ctx) {
-        if (source && boolTag.test.test(source)) {
-          const sv = source[0] === "t" || source[0] === "T";
+      stringify({ source: source2, value: value2 }, ctx) {
+        if (source2 && boolTag.test.test(source2)) {
+          const sv = source2[0] === "t" || source2[0] === "T";
           if (value2 === sv)
-            return source;
+            return source2;
         }
         return value2 ? ctx.options.trueStr : ctx.options.falseStr;
       }
@@ -21944,10 +21944,10 @@ var require_bool2 = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/schema/yaml-1.1/bool.js"(exports) {
     "use strict";
     var Scalar = require_Scalar();
-    function boolStringify({ value: value2, source }, ctx) {
+    function boolStringify({ value: value2, source: source2 }, ctx) {
       const boolObj = value2 ? trueTag : falseTag;
-      if (source && boolObj.test.test(source))
-        return source;
+      if (source2 && boolObj.test.test(source2))
+        return source2;
       return value2 ? ctx.options.trueStr : ctx.options.falseStr;
     }
     var trueTag = {
@@ -23279,7 +23279,7 @@ var require_resolve_end = __commonJS({
         let hasSpace = false;
         let sep5 = "";
         for (const token of end) {
-          const { source, type } = token;
+          const { source: source2, type } = token;
           switch (type) {
             case "space":
               hasSpace = true;
@@ -23287,7 +23287,7 @@ var require_resolve_end = __commonJS({
             case "comment": {
               if (reqSpace && !hasSpace)
                 onError(token, "MISSING_CHAR", "Comments must be separated from other tokens by white space characters");
-              const cb = source.substring(1) || " ";
+              const cb = source2.substring(1) || " ";
               if (!comment)
                 comment = cb;
               else
@@ -23297,13 +23297,13 @@ var require_resolve_end = __commonJS({
             }
             case "newline":
               if (comment)
-                sep5 += source;
+                sep5 += source2;
               hasSpace = true;
               break;
             default:
               onError(token, "UNEXPECTED_TOKEN", `Unexpected ${type} at node end`);
           }
-          offset2 += source.length;
+          offset2 += source2.length;
         }
       }
       return { comment, offset: offset2 };
@@ -23327,9 +23327,9 @@ var require_resolve_flow_collection = __commonJS({
     var blockMsg = "Block collections are not allowed within flow collections";
     var isBlock = (token) => token && (token.type === "block-map" || token.type === "block-seq");
     function resolveFlowCollection({ composeNode, composeEmptyNode }, ctx, fc, onError, tag2) {
-      const isMap3 = fc.start.source === "{";
-      const fcName = isMap3 ? "flow map" : "flow sequence";
-      const NodeClass = tag2?.nodeClass ?? (isMap3 ? YAMLMap.YAMLMap : YAMLSeq.YAMLSeq);
+      const isMap4 = fc.start.source === "{";
+      const fcName = isMap4 ? "flow map" : "flow sequence";
+      const NodeClass = tag2?.nodeClass ?? (isMap4 ? YAMLMap.YAMLMap : YAMLSeq.YAMLSeq);
       const coll = new NodeClass(ctx.schema);
       coll.flow = true;
       const atRoot = ctx.atRoot;
@@ -23365,7 +23365,7 @@ var require_resolve_flow_collection = __commonJS({
             offset2 = props.end;
             continue;
           }
-          if (!isMap3 && ctx.options.strict && utilContainsNewline.containsNewline(key))
+          if (!isMap4 && ctx.options.strict && utilContainsNewline.containsNewline(key))
             onError(
               key,
               // checked by containsNewline()
@@ -23405,7 +23405,7 @@ var require_resolve_flow_collection = __commonJS({
             }
           }
         }
-        if (!isMap3 && !sep5 && !props.found) {
+        if (!isMap4 && !sep5 && !props.found) {
           const valueNode = value2 ? composeNode(ctx, value2, props, onError) : composeEmptyNode(ctx, props.end, sep5, null, props, onError);
           coll.items.push(valueNode);
           offset2 = valueNode.range[2];
@@ -23428,7 +23428,7 @@ var require_resolve_flow_collection = __commonJS({
             startOnNewline: false
           });
           if (valueProps.found) {
-            if (!isMap3 && !props.found && ctx.options.strict) {
+            if (!isMap4 && !props.found && ctx.options.strict) {
               if (sep5)
                 for (const st of sep5) {
                   if (st === valueProps.found)
@@ -23460,7 +23460,7 @@ var require_resolve_flow_collection = __commonJS({
           const pair = new Pair.Pair(keyNode, valueNode);
           if (ctx.options.keepSourceTokens)
             pair.srcToken = collItem;
-          if (isMap3) {
+          if (isMap4) {
             const map2 = coll;
             if (utilMapIncludes.mapIncludes(ctx, map2.items, keyNode))
               onError(keyStart, "DUPLICATE_KEY", "Map keys must be unique");
@@ -23476,7 +23476,7 @@ var require_resolve_flow_collection = __commonJS({
           offset2 = valueNode ? valueNode.range[2] : valueProps.end;
         }
       }
-      const expectedEnd = isMap3 ? "}" : "]";
+      const expectedEnd = isMap4 ? "}" : "]";
       const [ce, ...ee] = fc.end;
       let cePos = offset2;
       if (ce?.source === expectedEnd)
@@ -23685,13 +23685,13 @@ var require_resolve_block_scalar = __commonJS({
         onError(props[0], "IMPOSSIBLE", "Block scalar header not found");
         return null;
       }
-      const { source } = props[0];
-      const mode = source[0];
+      const { source: source2 } = props[0];
+      const mode = source2[0];
       let indent = 0;
       let chomp = "";
       let error63 = -1;
-      for (let i = 1; i < source.length; ++i) {
-        const ch = source[i];
+      for (let i = 1; i < source2.length; ++i) {
+        const ch = source2[i];
         if (!chomp && (ch === "-" || ch === "+"))
           chomp = ch;
         else {
@@ -23703,10 +23703,10 @@ var require_resolve_block_scalar = __commonJS({
         }
       }
       if (error63 !== -1)
-        onError(error63, "UNEXPECTED_TOKEN", `Block scalar header includes extra characters: ${source}`);
+        onError(error63, "UNEXPECTED_TOKEN", `Block scalar header includes extra characters: ${source2}`);
       let hasSpace = false;
       let comment = "";
-      let length = source.length;
+      let length = source2.length;
       for (let i = 1; i < props.length; ++i) {
         const token = props[i];
         switch (token.type) {
@@ -23740,8 +23740,8 @@ var require_resolve_block_scalar = __commonJS({
       }
       return { mode, indent, chomp, comment, length };
     }
-    function splitLines2(source) {
-      const split = source.split(/\n( *)/);
+    function splitLines2(source2) {
+      const split = source2.split(/\n( *)/);
       const first = split[0];
       const m = first.match(/^( *)/);
       const line0 = m?.[1] ? [m[1], first.slice(m[1].length)] : ["", first];
@@ -23761,22 +23761,22 @@ var require_resolve_flow_scalar = __commonJS({
     var Scalar = require_Scalar();
     var resolveEnd = require_resolve_end();
     function resolveFlowScalar(scalar, strict, onError) {
-      const { offset: offset2, type, source, end } = scalar;
+      const { offset: offset2, type, source: source2, end } = scalar;
       let _type;
       let value2;
       const _onError = (rel, code2, msg) => onError(offset2 + rel, code2, msg);
       switch (type) {
         case "scalar":
           _type = Scalar.Scalar.PLAIN;
-          value2 = plainValue(source, _onError);
+          value2 = plainValue(source2, _onError);
           break;
         case "single-quoted-scalar":
           _type = Scalar.Scalar.QUOTE_SINGLE;
-          value2 = singleQuotedValue(source, _onError);
+          value2 = singleQuotedValue(source2, _onError);
           break;
         case "double-quoted-scalar":
           _type = Scalar.Scalar.QUOTE_DOUBLE;
-          value2 = doubleQuotedValue(source, _onError);
+          value2 = doubleQuotedValue(source2, _onError);
           break;
         /* istanbul ignore next should not happen */
         default:
@@ -23785,10 +23785,10 @@ var require_resolve_flow_scalar = __commonJS({
             value: "",
             type: null,
             comment: "",
-            range: [offset2, offset2 + source.length, offset2 + source.length]
+            range: [offset2, offset2 + source2.length, offset2 + source2.length]
           };
       }
-      const valueEnd = offset2 + source.length;
+      const valueEnd = offset2 + source2.length;
       const re = resolveEnd.resolveEnd(end, valueEnd, strict, onError);
       return {
         value: value2,
@@ -23797,9 +23797,9 @@ var require_resolve_flow_scalar = __commonJS({
         range: [offset2, valueEnd, re.offset]
       };
     }
-    function plainValue(source, onError) {
+    function plainValue(source2, onError) {
       let badChar = "";
-      switch (source[0]) {
+      switch (source2[0]) {
         /* istanbul ignore next should not happen */
         case "	":
           badChar = "a tab character";
@@ -23812,29 +23812,29 @@ var require_resolve_flow_scalar = __commonJS({
           break;
         case "|":
         case ">": {
-          badChar = `block scalar indicator ${source[0]}`;
+          badChar = `block scalar indicator ${source2[0]}`;
           break;
         }
         case "@":
         case "`": {
-          badChar = `reserved character ${source[0]}`;
+          badChar = `reserved character ${source2[0]}`;
           break;
         }
       }
       if (badChar)
         onError(0, "BAD_SCALAR_START", `Plain value cannot start with ${badChar}`);
-      return unfoldLines(source);
+      return unfoldLines(source2);
     }
-    function singleQuotedValue(source, onError) {
-      if (source[source.length - 1] !== "'" || source.length === 1)
-        onError(source.length, "MISSING_CHAR", "Missing closing 'quote");
-      return unfoldLines(source.slice(1, -1)).replace(/''/g, "'");
+    function singleQuotedValue(source2, onError) {
+      if (source2[source2.length - 1] !== "'" || source2.length === 1)
+        onError(source2.length, "MISSING_CHAR", "Missing closing 'quote");
+      return unfoldLines(source2.slice(1, -1)).replace(/''/g, "'");
     }
-    function unfoldLines(source) {
+    function unfoldLines(source2) {
       const line = /(.*?)\r?\n/sy;
-      let match = line.exec(source);
+      let match = line.exec(source2);
       if (!match)
-        return source;
+        return source2;
       let trimEnd, trimBoth;
       try {
         trimEnd = new RegExp("(?<![ 	])[ 	]+$");
@@ -23846,7 +23846,7 @@ var require_resolve_flow_scalar = __commonJS({
       let res = match[1].replace(trimEnd, "");
       let sep5 = " ";
       let pos = line.lastIndex;
-      while (match = line.exec(source)) {
+      while (match = line.exec(source2)) {
         const lm = match[1].replace(trimBoth, "");
         if (lm === "") {
           if (sep5 === "\n")
@@ -23861,66 +23861,66 @@ var require_resolve_flow_scalar = __commonJS({
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
-      match = last.exec(source);
+      match = last.exec(source2);
       return res + sep5 + (match?.[1] ?? "");
     }
-    function doubleQuotedValue(source, onError) {
+    function doubleQuotedValue(source2, onError) {
       let res = "";
-      for (let i = 1; i < source.length - 1; ++i) {
-        const ch = source[i];
-        if (ch === "\r" && source[i + 1] === "\n")
+      for (let i = 1; i < source2.length - 1; ++i) {
+        const ch = source2[i];
+        if (ch === "\r" && source2[i + 1] === "\n")
           continue;
         if (ch === "\n") {
-          const { fold, offset: offset2 } = foldNewline(source, i);
+          const { fold, offset: offset2 } = foldNewline(source2, i);
           res += fold;
           i = offset2;
         } else if (ch === "\\") {
-          let next = source[++i];
+          let next = source2[++i];
           const cc = escapeCodes[next];
           if (cc)
             res += cc;
           else if (next === "\n") {
-            next = source[i + 1];
+            next = source2[i + 1];
             while (next === " " || next === "	")
-              next = source[++i + 1];
-          } else if (next === "\r" && source[i + 1] === "\n") {
-            next = source[++i + 1];
+              next = source2[++i + 1];
+          } else if (next === "\r" && source2[i + 1] === "\n") {
+            next = source2[++i + 1];
             while (next === " " || next === "	")
-              next = source[++i + 1];
+              next = source2[++i + 1];
           } else if (next === "x" || next === "u" || next === "U") {
             const length = next === "x" ? 2 : next === "u" ? 4 : 8;
-            res += parseCharCode(source, i + 1, length, onError);
+            res += parseCharCode(source2, i + 1, length, onError);
             i += length;
           } else {
-            const raw = source.substr(i - 1, 2);
+            const raw = source2.substr(i - 1, 2);
             onError(i - 1, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
             res += raw;
           }
         } else if (ch === " " || ch === "	") {
           const wsStart = i;
-          let next = source[i + 1];
+          let next = source2[i + 1];
           while (next === " " || next === "	")
-            next = source[++i + 1];
-          if (next !== "\n" && !(next === "\r" && source[i + 2] === "\n"))
-            res += i > wsStart ? source.slice(wsStart, i + 1) : ch;
+            next = source2[++i + 1];
+          if (next !== "\n" && !(next === "\r" && source2[i + 2] === "\n"))
+            res += i > wsStart ? source2.slice(wsStart, i + 1) : ch;
         } else {
           res += ch;
         }
       }
-      if (source[source.length - 1] !== '"' || source.length === 1)
-        onError(source.length, "MISSING_CHAR", 'Missing closing "quote');
+      if (source2[source2.length - 1] !== '"' || source2.length === 1)
+        onError(source2.length, "MISSING_CHAR", 'Missing closing "quote');
       return res;
     }
-    function foldNewline(source, offset2) {
+    function foldNewline(source2, offset2) {
       let fold = "";
-      let ch = source[offset2 + 1];
+      let ch = source2[offset2 + 1];
       while (ch === " " || ch === "	" || ch === "\n" || ch === "\r") {
-        if (ch === "\r" && source[offset2 + 2] !== "\n")
+        if (ch === "\r" && source2[offset2 + 2] !== "\n")
           break;
         if (ch === "\n")
           fold += "\n";
         offset2 += 1;
-        ch = source[offset2 + 1];
+        ch = source2[offset2 + 1];
       }
       if (!fold)
         fold = " ";
@@ -23959,14 +23959,14 @@ var require_resolve_flow_scalar = __commonJS({
       "\\": "\\",
       "	": "	"
     };
-    function parseCharCode(source, offset2, length, onError) {
-      const cc = source.substr(offset2, length);
+    function parseCharCode(source2, offset2, length, onError) {
+      const cc = source2.substr(offset2, length);
       const ok = cc.length === length && /^[0-9a-fA-F]+$/.test(cc);
       const code2 = ok ? parseInt(cc, 16) : NaN;
       try {
         return String.fromCodePoint(code2);
       } catch {
-        const raw = source.substr(offset2 - 2, length + 2);
+        const raw = source2.substr(offset2 - 2, length + 2);
         onError(offset2 - 2, "BAD_DQ_ESCAPE", `Invalid escape sequence ${raw}`);
         return raw;
       }
@@ -24174,13 +24174,13 @@ var require_compose_node = __commonJS({
       }
       return node2;
     }
-    function composeAlias({ options }, { offset: offset2, source, end }, onError) {
-      const alias = new Alias.Alias(source.substring(1));
+    function composeAlias({ options }, { offset: offset2, source: source2, end }, onError) {
+      const alias = new Alias.Alias(source2.substring(1));
       if (alias.source === "")
         onError(offset2, "BAD_ALIAS", "Alias cannot be an empty string");
       if (alias.source.endsWith(":"))
-        onError(offset2 + source.length - 1, "BAD_ALIAS", "Alias ending in : is ambiguous", true);
-      const valueEnd = offset2 + source.length;
+        onError(offset2 + source2.length - 1, "BAD_ALIAS", "Alias ending in : is ambiguous", true);
+      const valueEnd = offset2 + source2.length;
       const re = resolveEnd.resolveEnd(end, valueEnd, options.strict, onError);
       alias.range = [offset2, valueEnd, re.offset];
       if (re.comment)
@@ -24251,18 +24251,18 @@ var require_composer = __commonJS({
         return [src, src + 1];
       if (Array.isArray(src))
         return src.length === 2 ? src : [src[0], src[1]];
-      const { offset: offset2, source } = src;
-      return [offset2, offset2 + (typeof source === "string" ? source.length : 1)];
+      const { offset: offset2, source: source2 } = src;
+      return [offset2, offset2 + (typeof source2 === "string" ? source2.length : 1)];
     }
     function parsePrelude(prelude) {
       let comment = "";
       let atComment = false;
       let afterEmptyLine = false;
       for (let i = 0; i < prelude.length; ++i) {
-        const source = prelude[i];
-        switch (source[0]) {
+        const source2 = prelude[i];
+        switch (source2[0]) {
           case "#":
-            comment += (comment === "" ? "" : afterEmptyLine ? "\n\n" : "\n") + (source.substring(1) || " ");
+            comment += (comment === "" ? "" : afterEmptyLine ? "\n\n" : "\n") + (source2.substring(1) || " ");
             atComment = true;
             afterEmptyLine = false;
             break;
@@ -24286,8 +24286,8 @@ var require_composer = __commonJS({
         this.prelude = [];
         this.errors = [];
         this.warnings = [];
-        this.onError = (source, code2, message2, warning2) => {
-          const pos = getErrorPos(source);
+        this.onError = (source2, code2, message2, warning2) => {
+          const pos = getErrorPos(source2);
           if (warning2)
             this.warnings.push(new errors.YAMLWarning(pos, code2, message2));
           else
@@ -24473,7 +24473,7 @@ var require_cst_scalar = __commonJS({
     }
     function createScalarToken(value2, context) {
       const { implicitKey = false, indent, inFlow = false, offset: offset2 = -1, type = "PLAIN" } = context;
-      const source = stringifyString.stringifyString({ type, value: value2 }, {
+      const source2 = stringifyString.stringifyString({ type, value: value2 }, {
         implicitKey,
         indent: indent > 0 ? " ".repeat(indent) : "",
         inFlow,
@@ -24482,12 +24482,12 @@ var require_cst_scalar = __commonJS({
       const end = context.end ?? [
         { type: "newline", offset: -1, indent, source: "\n" }
       ];
-      switch (source[0]) {
+      switch (source2[0]) {
         case "|":
         case ">": {
-          const he = source.indexOf("\n");
-          const head = source.substring(0, he);
-          const body = source.substring(he + 1) + "\n";
+          const he = source2.indexOf("\n");
+          const head = source2.substring(0, he);
+          const body = source2.substring(he + 1) + "\n";
           const props = [
             { type: "block-scalar-header", offset: offset2, indent, source: head }
           ];
@@ -24496,11 +24496,11 @@ var require_cst_scalar = __commonJS({
           return { type: "block-scalar", offset: offset2, indent, props, source: body };
         }
         case '"':
-          return { type: "double-quoted-scalar", offset: offset2, indent, source, end };
+          return { type: "double-quoted-scalar", offset: offset2, indent, source: source2, end };
         case "'":
-          return { type: "single-quoted-scalar", offset: offset2, indent, source, end };
+          return { type: "single-quoted-scalar", offset: offset2, indent, source: source2, end };
         default:
-          return { type: "scalar", offset: offset2, indent, source, end };
+          return { type: "scalar", offset: offset2, indent, source: source2, end };
       }
     }
     function setScalarValue(token, value2, context = {}) {
@@ -24526,31 +24526,31 @@ var require_cst_scalar = __commonJS({
           default:
             type = "PLAIN";
         }
-      const source = stringifyString.stringifyString({ type, value: value2 }, {
+      const source2 = stringifyString.stringifyString({ type, value: value2 }, {
         implicitKey: implicitKey || indent === null,
         indent: indent !== null && indent > 0 ? " ".repeat(indent) : "",
         inFlow,
         options: { blockQuote: true, lineWidth: -1 }
       });
-      switch (source[0]) {
+      switch (source2[0]) {
         case "|":
         case ">":
-          setBlockScalarValue(token, source);
+          setBlockScalarValue(token, source2);
           break;
         case '"':
-          setFlowScalarValue(token, source, "double-quoted-scalar");
+          setFlowScalarValue(token, source2, "double-quoted-scalar");
           break;
         case "'":
-          setFlowScalarValue(token, source, "single-quoted-scalar");
+          setFlowScalarValue(token, source2, "single-quoted-scalar");
           break;
         default:
-          setFlowScalarValue(token, source, "scalar");
+          setFlowScalarValue(token, source2, "scalar");
       }
     }
-    function setBlockScalarValue(token, source) {
-      const he = source.indexOf("\n");
-      const head = source.substring(0, he);
-      const body = source.substring(he + 1) + "\n";
+    function setBlockScalarValue(token, source2) {
+      const he = source2.indexOf("\n");
+      const head = source2.substring(0, he);
+      const body = source2.substring(he + 1) + "\n";
       if (token.type === "block-scalar") {
         const header = token.props[0];
         if (header.type !== "block-scalar-header")
@@ -24585,31 +24585,31 @@ var require_cst_scalar = __commonJS({
           }
       return false;
     }
-    function setFlowScalarValue(token, source, type) {
+    function setFlowScalarValue(token, source2, type) {
       switch (token.type) {
         case "scalar":
         case "double-quoted-scalar":
         case "single-quoted-scalar":
           token.type = type;
-          token.source = source;
+          token.source = source2;
           break;
         case "block-scalar": {
           const end = token.props.slice(1);
-          let oa = source.length;
+          let oa = source2.length;
           if (token.props[0].type === "block-scalar-header")
             oa -= token.props[0].source.length;
           for (const tok of end)
             tok.offset += oa;
           delete token.props;
-          Object.assign(token, { type, source, end });
+          Object.assign(token, { type, source: source2, end });
           break;
         }
         case "block-map":
         case "block-seq": {
-          const offset2 = token.offset + source.length;
+          const offset2 = token.offset + source2.length;
           const nl = { type: "newline", offset: offset2, indent: token.indent, source: "\n" };
           delete token.items;
-          Object.assign(token, { type, source, end: [nl] });
+          Object.assign(token, { type, source: source2, end: [nl] });
           break;
         }
         default: {
@@ -24618,7 +24618,7 @@ var require_cst_scalar = __commonJS({
           for (const key of Object.keys(token))
             if (key !== "type" && key !== "offset")
               delete token[key];
-          Object.assign(token, { type, indent, source, end });
+          Object.assign(token, { type, indent, source: source2, end });
         }
       }
     }
@@ -24763,7 +24763,7 @@ var require_cst = __commonJS({
     var FLOW_END = "";
     var SCALAR = "";
     var isCollection = (token) => !!token && "items" in token;
-    var isScalar3 = (token) => !!token && (token.type === "scalar" || token.type === "single-quoted-scalar" || token.type === "double-quoted-scalar" || token.type === "block-scalar");
+    var isScalar4 = (token) => !!token && (token.type === "scalar" || token.type === "single-quoted-scalar" || token.type === "double-quoted-scalar" || token.type === "block-scalar");
     function prettyToken(token) {
       switch (token) {
         case BOM2:
@@ -24778,8 +24778,8 @@ var require_cst = __commonJS({
           return JSON.stringify(token);
       }
     }
-    function tokenType(source) {
-      switch (source) {
+    function tokenType(source2) {
+      switch (source2) {
         case BOM2:
           return "byte-order-mark";
         case DOCUMENT:
@@ -24813,7 +24813,7 @@ var require_cst = __commonJS({
         case ",":
           return "comma";
       }
-      switch (source[0]) {
+      switch (source2[0]) {
         case " ":
         case "	":
           return "space";
@@ -24847,7 +24847,7 @@ var require_cst = __commonJS({
     exports.FLOW_END = FLOW_END;
     exports.SCALAR = SCALAR;
     exports.isCollection = isCollection;
-    exports.isScalar = isScalar3;
+    exports.isScalar = isScalar4;
     exports.prettyToken = prettyToken;
     exports.tokenType = tokenType;
   }
@@ -24895,11 +24895,11 @@ var require_lexer = __commonJS({
        *
        * @returns A generator of lexical tokens
        */
-      *lex(source, incomplete = false) {
-        if (source) {
-          if (typeof source !== "string")
+      *lex(source2, incomplete = false) {
+        if (source2) {
+          if (typeof source2 !== "string")
             throw TypeError("source is not a string");
-          this.buffer = this.buffer ? this.buffer + source : source;
+          this.buffer = this.buffer ? this.buffer + source2 : source2;
           this.lineEndPos = null;
         }
         this.atEnd = !incomplete;
@@ -25544,12 +25544,12 @@ var require_parser = __commonJS({
       }
       return prev.splice(i, prev.length);
     }
-    function arrayPushArray(target, source) {
-      if (source.length < 1e5)
-        Array.prototype.push.apply(target, source);
+    function arrayPushArray(target, source2) {
+      if (source2.length < 1e5)
+        Array.prototype.push.apply(target, source2);
       else
-        for (let i = 0; i < source.length; ++i)
-          target.push(source[i]);
+        for (let i = 0; i < source2.length; ++i)
+          target.push(source2[i]);
     }
     function fixFlowSeqItems(fc) {
       if (fc.start.type === "flow-seq-start") {
@@ -25595,10 +25595,10 @@ var require_parser = __commonJS({
        *
        * @returns A generator of tokens representing each directive, document, and other structure.
        */
-      *parse(source, incomplete = false) {
+      *parse(source2, incomplete = false) {
         if (this.onNewLine && this.offset === 0)
           this.onNewLine(0);
-        for (const lexeme of this.lexer.lex(source, incomplete))
+        for (const lexeme of this.lexer.lex(source2, incomplete))
           yield* this.next(lexeme);
         if (!incomplete)
           yield* this.end();
@@ -25606,21 +25606,21 @@ var require_parser = __commonJS({
       /**
        * Advance the parser by the `source` of one lexical token.
        */
-      *next(source) {
-        this.source = source;
+      *next(source2) {
+        this.source = source2;
         if (node_process.env.LOG_TOKENS)
-          console.log("|", cst.prettyToken(source));
+          console.log("|", cst.prettyToken(source2));
         if (this.atScalar) {
           this.atScalar = false;
           yield* this.step();
-          this.offset += source.length;
+          this.offset += source2.length;
           return;
         }
-        const type = cst.tokenType(source);
+        const type = cst.tokenType(source2);
         if (!type) {
-          const message2 = `Not a YAML token: ${source}`;
-          yield* this.pop({ type: "error", offset: this.offset, message: message2, source });
-          this.offset += source.length;
+          const message2 = `Not a YAML token: ${source2}`;
+          yield* this.pop({ type: "error", offset: this.offset, message: message2, source: source2 });
+          this.offset += source2.length;
         } else if (type === "scalar") {
           this.atNewLine = false;
           this.atScalar = true;
@@ -25633,17 +25633,17 @@ var require_parser = __commonJS({
               this.atNewLine = true;
               this.indent = 0;
               if (this.onNewLine)
-                this.onNewLine(this.offset + source.length);
+                this.onNewLine(this.offset + source2.length);
               break;
             case "space":
-              if (this.atNewLine && source[0] === " ")
-                this.indent += source.length;
+              if (this.atNewLine && source2[0] === " ")
+                this.indent += source2.length;
               break;
             case "explicit-key-ind":
             case "map-value-ind":
             case "seq-item-ind":
               if (this.atNewLine)
-                this.indent += source.length;
+                this.indent += source2.length;
               break;
             case "doc-mode":
             case "flow-error-end":
@@ -25651,7 +25651,7 @@ var require_parser = __commonJS({
             default:
               this.atNewLine = false;
           }
-          this.offset += source.length;
+          this.offset += source2.length;
         }
       }
       /** Call at end of input to push out any remaining constructions */
@@ -26363,26 +26363,26 @@ var require_public_api = __commonJS({
       const lineCounter$1 = options.lineCounter || prettyErrors && new lineCounter.LineCounter() || null;
       return { lineCounter: lineCounter$1, prettyErrors };
     }
-    function parseAllDocuments2(source, options = {}) {
+    function parseAllDocuments2(source2, options = {}) {
       const { lineCounter: lineCounter2, prettyErrors } = parseOptions(options);
       const parser$1 = new parser.Parser(lineCounter2?.addNewLine);
       const composer$1 = new composer.Composer(options);
-      const docs = Array.from(composer$1.compose(parser$1.parse(source)));
+      const docs = Array.from(composer$1.compose(parser$1.parse(source2)));
       if (prettyErrors && lineCounter2)
         for (const doc of docs) {
-          doc.errors.forEach(errors.prettifyError(source, lineCounter2));
-          doc.warnings.forEach(errors.prettifyError(source, lineCounter2));
+          doc.errors.forEach(errors.prettifyError(source2, lineCounter2));
+          doc.warnings.forEach(errors.prettifyError(source2, lineCounter2));
         }
       if (docs.length > 0)
         return docs;
       return Object.assign([], { empty: true }, composer$1.streamInfo());
     }
-    function parseDocument2(source, options = {}) {
+    function parseDocument3(source2, options = {}) {
       const { lineCounter: lineCounter2, prettyErrors } = parseOptions(options);
       const parser$1 = new parser.Parser(lineCounter2?.addNewLine);
       const composer$1 = new composer.Composer(options);
       let doc = null;
-      for (const _doc of composer$1.compose(parser$1.parse(source), true, source.length)) {
+      for (const _doc of composer$1.compose(parser$1.parse(source2), true, source2.length)) {
         if (!doc)
           doc = _doc;
         else if (doc.options.logLevel !== "silent") {
@@ -26391,8 +26391,8 @@ var require_public_api = __commonJS({
         }
       }
       if (prettyErrors && lineCounter2) {
-        doc.errors.forEach(errors.prettifyError(source, lineCounter2));
-        doc.warnings.forEach(errors.prettifyError(source, lineCounter2));
+        doc.errors.forEach(errors.prettifyError(source2, lineCounter2));
+        doc.warnings.forEach(errors.prettifyError(source2, lineCounter2));
       }
       return doc;
     }
@@ -26403,7 +26403,7 @@ var require_public_api = __commonJS({
       } else if (options === void 0 && reviver && typeof reviver === "object") {
         options = reviver;
       }
-      const doc = parseDocument2(src, options);
+      const doc = parseDocument3(src, options);
       if (!doc)
         return null;
       doc.warnings.forEach((warning2) => log3.warn(doc.options.logLevel, warning2));
@@ -26439,7 +26439,7 @@ var require_public_api = __commonJS({
     }
     exports.parse = parse7;
     exports.parseAllDocuments = parseAllDocuments2;
-    exports.parseDocument = parseDocument2;
+    exports.parseDocument = parseDocument3;
     exports.stringify = stringify2;
   }
 });
@@ -29530,8 +29530,8 @@ var require_parse3 = __commonJS({
       }
     };
     var buildCharClassStar = (chars) => {
-      const source = chars.length === 1 ? utils.escapeRegex(chars[0]) : `[${chars.map((ch) => utils.escapeRegex(ch)).join("")}]`;
-      return `${source}*`;
+      const source2 = chars.length === 1 ? utils.escapeRegex(chars[0]) : `[${chars.map((ch) => utils.escapeRegex(ch)).join("")}]`;
+      return `${source2}*`;
     };
     var getStarExtglobSequenceChars = (pattern) => {
       let index = 0;
@@ -30349,18 +30349,18 @@ var require_parse3 = __commonJS({
           default: {
             const match = /^(.*?)\.(\w+)$/.exec(str2);
             if (!match) return;
-            const source2 = create(match[1]);
-            if (!source2) return;
-            return source2 + DOT_LITERAL + match[2];
+            const source3 = create(match[1]);
+            if (!source3) return;
+            return source3 + DOT_LITERAL + match[2];
           }
         }
       };
       const output2 = utils.removePrefix(input2, state);
-      let source = create(output2);
-      if (source && opts.strictSlashes !== true) {
-        source += `${SLASH_LITERAL}?`;
+      let source2 = create(output2);
+      if (source2 && opts.strictSlashes !== true) {
+        source2 += `${SLASH_LITERAL}?`;
       }
-      return source;
+      return source2;
     };
     module.exports = parse7;
   }
@@ -30469,11 +30469,11 @@ var require_picomatch = __commonJS({
       const opts = options || {};
       const prepend = opts.contains ? "" : "^";
       const append = opts.contains ? "" : "$";
-      let source = `${prepend}(?:${state.output})${append}`;
+      let source2 = `${prepend}(?:${state.output})${append}`;
       if (state && state.negated === true) {
-        source = `^(?!${source}).*$`;
+        source2 = `^(?!${source2}).*$`;
       }
-      const regex = picomatch3.toRegex(source, options);
+      const regex = picomatch3.toRegex(source2, options);
       if (returnState === true) {
         regex.state = state;
       }
@@ -30492,10 +30492,10 @@ var require_picomatch = __commonJS({
       }
       return picomatch3.compileRe(parsed, options, returnOutput, returnState);
     };
-    picomatch3.toRegex = (source, options) => {
+    picomatch3.toRegex = (source2, options) => {
       try {
         const opts = options || {};
-        return new RegExp(source, opts.flags || (opts.nocase ? "i" : ""));
+        return new RegExp(source2, opts.flags || (opts.nocase ? "i" : ""));
       } catch (err) {
         if (options && options.debug === true) throw err;
         return /$^/;
@@ -33508,7 +33508,7 @@ var require_jiti = __commonJS({
         }, pathe_M_eThtNZ_dirname = function(e3) {
           const t3 = pathe_M_eThtNZ_normalizeWindowsPath(e3).replace(/\/$/, "").split("/").slice(0, -1);
           return 1 === t3.length && Je.test(t3[0]) && (t3[0] += "/"), t3.join("/") || (isAbsolute3(e3) ? "/" : ".");
-        }, basename4 = function(e3, t3) {
+        }, basename5 = function(e3, t3) {
           const i2 = pathe_M_eThtNZ_normalizeWindowsPath(e3).split("/");
           let n2 = "";
           for (let e4 = i2.length - 1; e4 >= 0; e4--) {
@@ -34229,7 +34229,7 @@ Default "index" lookups for the main are deprecated for ES modules.`, "Deprecati
           if (!e3.opts.fsCache || !t3.filename) return i2();
           const n2 = ` /* v${Ti}-${utils_hash(t3.source, 16)} */
 `;
-          let a2 = `${basename4(pathe_M_eThtNZ_dirname(t3.filename))}-${(function(e4) {
+          let a2 = `${basename5(pathe_M_eThtNZ_dirname(t3.filename))}-${(function(e4) {
             const t4 = e4.split(Wt).pop();
             if (!t4) return;
             const i3 = t4.lastIndexOf(".");
@@ -34275,7 +34275,7 @@ Default "index" lookups for the main are deprecated for ES modules.`, "Deprecati
           return i2.startsWith("#!") && (i2 = "// " + i2), i2;
         }
         function eval_evalModule(t3, i2, n2 = {}) {
-          const a2 = n2.id || (n2.filename ? basename4(n2.filename) : `_jitiEval.${n2.ext || (n2.async ? "mjs" : "js")}`), c2 = n2.filename || jitiResolve(t3, a2, { async: n2.async }), l2 = n2.ext || extname(c2), y2 = n2.cache || t3.parentCache || {}, E2 = /\.[cm]?tsx?$/.test(l2), w2 = ".mjs" === l2 || ".js" === l2 && "module" === (function(e3) {
+          const a2 = n2.id || (n2.filename ? basename5(n2.filename) : `_jitiEval.${n2.ext || (n2.async ? "mjs" : "js")}`), c2 = n2.filename || jitiResolve(t3, a2, { async: n2.async }), l2 = n2.ext || extname(c2), y2 = n2.cache || t3.parentCache || {}, E2 = /\.[cm]?tsx?$/.test(l2), w2 = ".mjs" === l2 || ".js" === l2 && "module" === (function(e3) {
             for (; e3 && "." !== e3 && "/" !== e3; ) {
               e3 = pathe_M_eThtNZ_join(e3, "..");
               try {
@@ -34323,7 +34323,7 @@ Default "index" lookups for the main are deprecated for ES modules.`, "Deprecati
                     (0, $e.mkdirSync)(n4, { recursive: true });
                   } catch {
                   }
-                  const a4 = pathe_M_eThtNZ_join(n4, `${basename4(i6, extname(i6))}-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
+                  const a4 = pathe_M_eThtNZ_join(n4, `${basename5(i6, extname(i6))}-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
                   return (0, $e.writeFileSync)(a4, t5), a4;
                 })(l3, n3), debug2(t4, "[esm]", "[tempfile]", c4), a3(pathToFileURL(c4))), E3 = y3 ? a3(y3).catch((e3) => {
                   if ("ENAMETOOLONG" !== e3?.code) throw e3;
@@ -68294,11 +68294,11 @@ var init_sign = __esm({
 });
 
 // node_modules/.pnpm/jose@6.2.17/node_modules/jose/dist/webapi/lib/key_algorithm.js
-function unsupportedAlg(source = 'JWK "alg" (Algorithm) Parameter') {
-  throw new JOSENotSupported(`Invalid or unsupported ${source} value`);
+function unsupportedAlg(source2 = 'JWK "alg" (Algorithm) Parameter') {
+  throw new JOSENotSupported(`Invalid or unsupported ${source2} value`);
 }
-function keyAlgorithm(alg, source) {
-  return (typeof alg == "string" ? JWS[alg] ?? JWE[alg] : void 0) ?? unsupportedAlg(source);
+function keyAlgorithm(alg, source2) {
+  return (typeof alg == "string" ? JWS[alg] ?? JWE[alg] : void 0) ?? unsupportedAlg(source2);
 }
 var algArgument;
 var init_key_algorithm = __esm({
@@ -69393,7 +69393,7 @@ function parseChangeset(text2, path) {
   const warnings = [];
   const extra = {};
   let bump;
-  let source;
+  let source2;
   let pr;
   for (const entry of entries) {
     switch (entry.key) {
@@ -69415,7 +69415,7 @@ function parseChangeset(text2, path) {
             `invalid source ${describe(entry.value)}: the only allowed value is "bot" (set on generated bot changesets); remove the line otherwise`
           );
         }
-        source = "bot";
+        source2 = "bot";
         break;
       case "pr":
         if (typeof entry.value !== "number" || !Number.isSafeInteger(entry.value) || entry.value < 1) {
@@ -69450,7 +69450,7 @@ function parseChangeset(text2, path) {
     );
   }
   const changeset = { name: basename(path), path, bump, summary: summary2, extra };
-  if (source) changeset.source = source;
+  if (source2) changeset.source = source2;
   if (pr !== void 0) changeset.pr = pr;
   return { changeset, warnings };
 }
@@ -70725,10 +70725,10 @@ function cached(getter) {
 function nullish(input2) {
   return input2 === null || input2 === void 0;
 }
-function cleanRegex(source) {
-  const start = source.startsWith("^") ? 1 : 0;
-  const end = source.endsWith("$") ? source.length - 1 : source.length;
-  return source.slice(start, end);
+function cleanRegex(source2) {
+  const start = source2.startsWith("^") ? 1 : 0;
+  const end = source2.endsWith("$") ? source2.length - 1 : source2.length;
+  return source2.slice(start, end);
 }
 function floatSafeRemainder(val, step) {
   const ratio = val / step;
@@ -70796,28 +70796,28 @@ function putProp(target, key, value2) {
   else
     target[key] = value2;
 }
-function mirrorShape(target, source, keys, wrap2) {
-  const raw = sourceShape(source);
+function mirrorShape(target, source2, keys, wrap2) {
+  const raw = sourceShape(source2);
   for (const key of keys) {
     const desc = Object.getOwnPropertyDescriptor(raw, key);
     if (!desc.enumerable)
       continue;
     if (desc.get) {
       deferProp(target, key, () => {
-        const value2 = source._zod.def.shape[key];
+        const value2 = source2._zod.def.shape[key];
         return wrap2 ? wrap2(value2, key) : value2;
       });
     } else
       putProp(target, key, wrap2 ? wrap2(desc.value, key) : desc.value);
   }
 }
-function mirrorProps(target, source) {
-  for (const key of Reflect.ownKeys(source)) {
-    const desc = Object.getOwnPropertyDescriptor(source, key);
+function mirrorProps(target, source2) {
+  for (const key of Reflect.ownKeys(source2)) {
+    const desc = Object.getOwnPropertyDescriptor(source2, key);
     if (!desc.enumerable)
       continue;
     if (desc.get)
-      deferProp(target, key, () => source[key]);
+      deferProp(target, key, () => source2[key]);
     else
       putProp(target, key, desc.value);
   }
@@ -72042,8 +72042,8 @@ var creditCard = /^\d(?:[ -]?\d){11,18}$/;
 var currencyCode = /^(?:AED|AFN|ALL|AMD|AOA|ARS|AUD|AWG|AZN|BAM|BBD|BDT|BHD|BIF|BMD|BND|BOB|BOV|BRL|BSD|BTN|BWP|BYN|BZD|CAD|CDF|CHE|CHF|CHW|CLF|CLP|CNY|COP|COU|CRC|CUP|CVE|CZK|DJF|DKK|DOP|DZD|EGP|ERN|ETB|EUR|FJD|FKP|GBP|GEL|GHS|GIP|GMD|GNF|GTQ|GYD|HKD|HNL|HTG|HUF|IDR|ILS|INR|IQD|IRR|ISK|JMD|JOD|JPY|KES|KGS|KHR|KMF|KPW|KRW|KWD|KYD|KZT|LAK|LBP|LKR|LRD|LSL|LYD|MAD|MDL|MGA|MKD|MMK|MNT|MOP|MRU|MUR|MVR|MWK|MXN|MXV|MYR|MZN|NAD|NGN|NIO|NOK|NPR|NZD|OMR|PAB|PEN|PGK|PHP|PKR|PLN|PYG|QAR|RON|RSD|RUB|RWF|SAR|SBD|SCR|SDG|SEK|SGD|SHP|SLE|SOS|SRD|SSP|STN|SVC|SYP|SZL|THB|TJS|TMT|TND|TOP|TRY|TTD|TWD|TZS|UAH|UGX|USD|USN|UYI|UYU|UYW|UZS|VED|VES|VND|VUV|WST|XAD|XAF|XAG|XAU|XBA|XBB|XBC|XBD|XCD|XCG|XDR|XOF|XPD|XPF|XPT|XSU|XTS|XUA|XXX|YER|ZAR|ZMW|ZWG)$/;
 var iban = /^[A-Z]{2}(?!00|01|99)\d{2}[A-Z0-9]{11,30}$/;
 var dateSource = `(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))`;
-function anchor(source) {
-  return new RegExp(`^${source}$`);
+function anchor(source2) {
+  return new RegExp(`^${source2}$`);
 }
 var date = /* @__PURE__ */ anchor(dateSource);
 function timeSource(args) {
@@ -74894,11 +74894,11 @@ var $ZodTemplateLiteral = /* @__PURE__ */ $constructor("$ZodTemplateLiteral", (i
   const regexParts = [];
   for (const part of def.parts) {
     if (typeof part === "object" && part !== null) {
-      const source = partPattern(part);
-      if (!source) {
+      const source2 = partPattern(part);
+      if (!source2) {
         throw new Error(`Invalid template literal part, no pattern found: ${[...part._zod.traits].shift()}`);
       }
-      regexParts.push(cleanRegex(source));
+      regexParts.push(cleanRegex(source2));
     } else if (part === null || primitiveTypes.has(typeof part)) {
       regexParts.push(escapeRegex(`${part}`));
     } else {
@@ -83024,9 +83024,9 @@ function withParser(schema, parser) {
     installCompiledUserMethods(clone2, schema, parser);
   return clone2;
 }
-function installCompiledUserMethods(target, source, parser) {
+function installCompiledUserMethods(target, source2, parser) {
   const targetAny = target;
-  const sourceAny = source;
+  const sourceAny = source2;
   if (typeof sourceAny.safeParse === "function") {
     const originalSafeParse = sourceAny.safeParse;
     targetAny.safeParse = (data, params) => {
@@ -85629,10 +85629,10 @@ function _stringFormat(Class2, format2, fnOrRegex, _params = {}) {
 
 // node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/to-json-schema.js
 function assignProps(target, ...sources) {
-  for (const source of sources) {
-    for (const key of Reflect.ownKeys(source)) {
-      if (Object.prototype.propertyIsEnumerable.call(source, key)) {
-        assignProp(target, key, source[key]);
+  for (const source2 of sources) {
+    for (const key of Reflect.ownKeys(source2)) {
+      if (Object.prototype.propertyIsEnumerable.call(source2, key)) {
+        assignProp(target, key, source2[key]);
       }
     }
   }
@@ -89939,7 +89939,9 @@ var androidSourceSchema = external_exports.discriminatedUnion("kind", [
     versionCodeKey: nonEmpty.default("VERSION_CODE")
   }),
   external_exports.strictObject({ kind: external_exports.literal("capacitor"), dir: nonEmpty }),
-  external_exports.strictObject({ kind: external_exports.literal("expo"), file: nonEmpty.default("app.json") })
+  external_exports.strictObject({ kind: external_exports.literal("expo"), file: nonEmpty.default("app.json") }),
+  /** A Flutter app: `<dir>/pubspec.yaml` (its `version`, build name `+` build number). */
+  external_exports.strictObject({ kind: external_exports.literal("flutter"), dir: nonEmpty.default(".") })
 ]);
 var androidTargetSchema = external_exports.strictObject({
   type: external_exports.literal("android"),
@@ -89961,8 +89963,8 @@ var iosSourceSchema = external_exports.discriminatedUnion("kind", [
     /** One plist (`file`) or several (`files`). */
     file: nonEmpty.optional(),
     files: external_exports.array(nonEmpty).min(1, "expected at least one Info.plist path").optional()
-  }).superRefine((source, ctx) => {
-    if (source.file !== void 0 && source.files !== void 0) {
+  }).superRefine((source2, ctx) => {
+    if (source2.file !== void 0 && source2.files !== void 0) {
       ctx.addIssue({
         code: "custom",
         message: "use either file (one Info.plist) or files (several), not both"
@@ -89975,7 +89977,9 @@ var iosSourceSchema = external_exports.discriminatedUnion("kind", [
     dir: nonEmpty,
     xcodeTargets: xcodeTargets.optional()
   }),
-  external_exports.strictObject({ kind: external_exports.literal("expo"), file: nonEmpty.default("app.json") })
+  external_exports.strictObject({ kind: external_exports.literal("expo"), file: nonEmpty.default("app.json") }),
+  /** A Flutter app: `<dir>/pubspec.yaml` (its `version`, build name `+` build number). */
+  external_exports.strictObject({ kind: external_exports.literal("flutter"), dir: nonEmpty.default(".") })
 ]);
 var iosTargetSchema = external_exports.strictObject({
   type: external_exports.literal("ios"),
@@ -90085,6 +90089,12 @@ var configSchema = external_exports.strictObject({
     partial: placeholderTemplate(["version"]).default("launchset/partial/{version}")
   }).prefault({}),
   buildNumber: buildNumberSchema.prefault({}),
+  /**
+   * The version that was released before launchset took over (init writes it). When its
+   * release tag doesn't exist, the release workflow on the base branch creates it at the commit
+   * it runs on, without building anything (spec 11.1 step 5).
+   */
+  baseline: external_exports.string().refine(isPlainVersion, { message: 'expected a plain version like "1.4.0"' }).optional(),
   check: external_exports.strictObject({ bots: external_exports.array(nonEmpty).default(DEFAULT_BOTS) }).prefault({}),
   /** `false` disables previews and prerelease branches (needed for the `semver` strategy). */
   preview: external_exports.union([external_exports.literal(false), previewSchema], {
@@ -90260,11 +90270,11 @@ function resolveTarget(name, target, root) {
       return { ...target, ...common, image, tags };
     }
     case "ios": {
-      const source = target.source.kind === "plist" ? {
+      const source2 = target.source.kind === "plist" ? {
         kind: "plist",
         files: target.source.files ?? (target.source.file ? [target.source.file] : [])
       } : target.source;
-      return { ...target, ...common, source };
+      return { ...target, ...common, source: source2 };
     }
     case "web":
       return { ...target, ...common, verify: [] };
@@ -90295,6 +90305,12 @@ function unitIssues(data) {
   }
   return issues;
 }
+function versionFileFormat(file2) {
+  return /(^|[\\/])pubspec\.yaml$/.test(file2) ? "pubspec" : "json";
+}
+function rootVersionHint(file2) {
+  return versionFileFormat(file2) === "pubspec" ? "Add a top-level version, e.g. `version: 0.1.0+1`." : 'Add a "version" field, e.g. "version": "0.1.0".';
+}
 function semanticIssues(config2) {
   const issues = [];
   const names = Object.keys(config2.targets);
@@ -90313,6 +90329,12 @@ function semanticIssues(config2) {
     issues.push({
       path: "targets",
       message: 'expected at least one target with release: "auto" (otherwise no release completes)'
+    });
+  }
+  if (/\.ya?ml$/i.test(config2.version.file) && versionFileFormat(config2.version.file) !== "pubspec") {
+    issues.push({
+      path: "version.file",
+      message: "expected a package.json-style JSON file or a Flutter pubspec.yaml; other YAML files can't hold the version"
     });
   }
   if (config2.tags.partial === config2.tags.release) {
@@ -90365,6 +90387,12 @@ function semanticIssues(config2) {
           }
         });
       }
+    }
+    if ((target.type === "android" || target.type === "ios") && target.source.kind === "flutter" && target.buildNumber.strategy === "eas") {
+      issues.push({
+        path: `${base}.buildNumber.strategy`,
+        message: 'the "eas" strategy is for Expo builds numbered by EAS; a Flutter app needs a build number from launchset (use "timestamp", "run-number" or "semver")'
+      });
     }
     if (target.type === "android" && target.verify.includes("store") && !target.store) {
       issues.push({
@@ -90662,14 +90690,14 @@ function templateMatcher(template, target) {
   if (!regex) {
     const targetSource = target === void 0 ? `(?<target>${TARGET_SOURCE})` : `(?<target>${escapeRegExp(target)})`;
     const seen = /* @__PURE__ */ new Set();
-    const source = template.split(/(\{version\}|\{target\})/).map((part) => {
+    const source2 = template.split(/(\{version\}|\{target\})/).map((part) => {
       if (part !== "{version}" && part !== "{target}") return escapeRegExp(part);
       const name = part.slice(1, -1);
       if (seen.has(name)) return `\\k<${name}>`;
       seen.add(name);
       return name === "version" ? `(?<version>${VERSION_SOURCE})` : targetSource;
     }).join("");
-    regex = new RegExp(`^${source}$`);
+    regex = new RegExp(`^${source2}$`);
     matcherCache.set(key, regex);
   }
   return regex;
@@ -91099,9 +91127,9 @@ function renderEntry(entry, input2) {
 function renderSection(input2) {
   const groups = /* @__PURE__ */ new Map();
   for (const entry of input2.entries) {
-    const { bump, source } = entry.changeset;
+    const { bump, source: source2 } = entry.changeset;
     if (bump === "none") continue;
-    const key = source === "bot" ? "dependencies" : bump;
+    const key = source2 === "bot" ? "dependencies" : bump;
     const list = groups.get(key) ?? [];
     list.push(renderEntry(entry, input2));
     groups.set(key, list);
@@ -91912,10 +91940,10 @@ var Git = class {
    * Fetch `source` from the remote into the local ref `tracking` (forced, no tags). Returns
    * false when the fetch fails; with `required`, throws the {@link GitError} instead.
    */
-  async fetchRef(source, tracking, options = {}) {
-    assertRefName("ref", source);
+  async fetchRef(source2, tracking, options = {}) {
+    assertRefName("ref", source2);
     assertRefName("ref", tracking);
-    const args = ["fetch", "--quiet", "--no-tags", this.remote, `+${source}:${tracking}`];
+    const args = ["fetch", "--quiet", "--no-tags", this.remote, `+${source2}:${tracking}`];
     const result = await this.exec(args, { auth: true });
     if (result.code === 0) return true;
     if (options.required) throw this.error(args, result);
@@ -93082,20 +93110,23 @@ async function collectSourceFiles(target, root) {
     await needFile(field, "pbxproj", join2(dir, "project.pbxproj"));
   };
   if (target.type === "android") {
-    const source = target.source;
-    switch (source.kind) {
+    const source2 = target.source;
+    switch (source2.kind) {
       case "gradle":
-        await needFile(`${base}.file`, "gradle", source.file);
+        await needFile(`${base}.file`, "gradle", source2.file);
         break;
       case "gradle-properties":
-        await needFile(`${base}.file`, "gradle-properties", source.file);
+        await needFile(`${base}.file`, "gradle-properties", source2.file);
         break;
       case "expo":
-        await needFile(`${base}.file`, "expo", source.file);
+        await needFile(`${base}.file`, "expo", source2.file);
+        break;
+      case "flutter":
+        await needFile(`${base}.dir`, "pubspec", join2(source2.dir, "pubspec.yaml"));
         break;
       case "capacitor": {
-        const groovy = join2(source.dir, "android/app/build.gradle");
-        const kts = join2(source.dir, "android/app/build.gradle.kts");
+        const groovy = join2(source2.dir, "android/app/build.gradle");
+        const kts = join2(source2.dir, "android/app/build.gradle.kts");
         const [g, k] = await Promise.all([
           statOrNull(resolve3(root, groovy)),
           statOrNull(resolve3(root, kts))
@@ -93119,24 +93150,27 @@ async function collectSourceFiles(target, root) {
       }
     }
   } else if (target.type === "ios") {
-    const source = target.source;
-    switch (source.kind) {
+    const source2 = target.source;
+    switch (source2.kind) {
       case "xcodeproj":
-        await needXcodeproj(`${base}.file`, source.file);
+        await needXcodeproj(`${base}.file`, source2.file);
         break;
       case "capacitor":
-        await needXcodeproj(`${base}.dir`, join2(source.dir, "ios/App/App.xcodeproj"));
+        await needXcodeproj(`${base}.dir`, join2(source2.dir, "ios/App/App.xcodeproj"));
         break;
       case "plist":
-        for (const [index, file2] of source.files.entries()) {
+        for (const [index, file2] of source2.files.entries()) {
           await needFile(`${base}.files.${index}`, "plist", file2);
         }
         break;
       case "xcconfig":
-        await needFile(`${base}.file`, "xcconfig", source.file);
+        await needFile(`${base}.file`, "xcconfig", source2.file);
         break;
       case "expo":
-        await needFile(`${base}.file`, "expo", source.file);
+        await needFile(`${base}.file`, "expo", source2.file);
+        break;
+      case "flutter":
+        await needFile(`${base}.dir`, "pubspec", join2(source2.dir, "pubspec.yaml"));
         break;
     }
   }
@@ -94183,8 +94217,8 @@ function isBuildSettingReference(value2) {
 // src/platforms/json-splice.ts
 function parseJsonTree(text2, file2) {
   const errors = [];
-  const source = text2.startsWith("\uFEFF") ? ` ${text2.slice(1)}` : text2;
-  const tree = parseTree2(source, errors, { allowTrailingComma: true, disallowComments: false });
+  const source2 = text2.startsWith("\uFEFF") ? ` ${text2.slice(1)}` : text2;
+  const tree = parseTree2(source2, errors, { allowTrailingComma: true, disallowComments: false });
   const first = errors[0];
   if (!tree || first) {
     const line = first ? lineOf(text2, first.offset) : 1;
@@ -95541,6 +95575,196 @@ var plist = {
   }
 };
 
+// src/platforms/yaml.ts
+var import_yaml2 = __toESM(require_dist(), 1);
+function parse4(text2, file2) {
+  const docs = (0, import_yaml2.parseAllDocuments)(text2);
+  const list = Array.isArray(docs) ? docs : [docs];
+  for (const doc of list) {
+    const err = doc.errors[0];
+    if (err) {
+      const line = err.linePos?.[0]?.line ?? lineOf(text2, err.pos[0]);
+      throw new StampError(file2, `invalid YAML (line ${line}): ${err.message.split("\n")[0]}`);
+    }
+  }
+  return list;
+}
+function describe4(text2, file2, key, scalar) {
+  const range = scalar.range;
+  const line = range ? lineOf(text2, range[0]) : 1;
+  const where = `"${key}" (line ${line})`;
+  if (!range || range[1] === range[0]) throw new StampError(file2, `${where} has no value`);
+  const type = scalar.type;
+  if (type !== "PLAIN" && type !== "QUOTE_DOUBLE" && type !== "QUOTE_SINGLE") {
+    throw new StampError(
+      file2,
+      `${where} is a block scalar; only plain or quoted values are supported`
+    );
+  }
+  const source2 = text2.slice(range[0], range[1]);
+  if (/[\r\n]/.test(source2))
+    throw new StampError(file2, `${where} spans multiple lines, which isn't supported`);
+  if (type === "PLAIN") {
+    return { start: range[0], end: range[1], quote: null, value: source2, line };
+  }
+  const quote = type === "QUOTE_DOUBLE" ? '"' : "'";
+  return { start: range[0] + 1, end: range[1] - 1, quote, value: String(scalar.value), line };
+}
+function walk(doc, path, file2, key) {
+  let node2 = doc.contents;
+  for (const segment of path) {
+    if ((0, import_yaml2.isAlias)(node2)) {
+      throw new StampError(
+        file2,
+        `"${key}" is reached through an alias (*${node2.source}); aliases and anchors can't be stamped`
+      );
+    }
+    if ((0, import_yaml2.isMap)(node2)) {
+      const next = node2.get(segment, true);
+      if (next === void 0) {
+        const merged = node2.items.some((pair) => (0, import_yaml2.isScalar)(pair.key) && pair.key.value === "<<");
+        if (merged) {
+          throw new StampError(
+            file2,
+            `"${key}" isn't set directly: a "<<" merge key is in the way and merge keys can't be stamped`
+          );
+        }
+        return void 0;
+      }
+      node2 = next;
+    } else if ((0, import_yaml2.isSeq)(node2) && /^(0|[1-9]\d*)$/.test(segment)) {
+      node2 = node2.get(Number(segment), true);
+    } else {
+      return void 0;
+    }
+  }
+  return node2;
+}
+function locateYamlScalar(text2, file2, key) {
+  const path = key.split(".");
+  const hits = [];
+  parse4(text2, file2).forEach((doc, index) => {
+    const node2 = walk(doc, path, file2, key);
+    if (node2 === void 0 || node2 === null) return;
+    if ((0, import_yaml2.isAlias)(node2)) {
+      throw new StampError(
+        file2,
+        `"${key}" is an alias (*${node2.source}); aliases and anchors can't be stamped`
+      );
+    }
+    if (!(0, import_yaml2.isScalar)(node2)) {
+      throw new StampError(file2, `"${key}" is a collection, expected a string value`);
+    }
+    if (node2.anchor) {
+      throw new StampError(
+        file2,
+        `"${key}" is anchored (&${node2.anchor}), so other places may share this value through an alias; anchors can't be stamped`
+      );
+    }
+    hits.push({ doc: index + 1, scalar: node2 });
+  });
+  if (hits.length === 0) throw new StampError(file2, `key "${key}" not found`);
+  if (hits.length > 1) {
+    const docs = hits.map((h) => h.doc).join(", ");
+    throw new StampError(
+      file2,
+      `key "${key}" exists in more than one YAML document (documents ${docs}); can't tell which one to stamp`
+    );
+  }
+  return describe4(text2, file2, key, hits[0].scalar);
+}
+var yamlValue = {
+  read(text2, file2, options) {
+    const loc = locateYamlScalar(text2, file2, options.key);
+    return [
+      {
+        field: "marketing",
+        key: options.key,
+        value: loc.value,
+        line: loc.line
+      }
+    ];
+  },
+  write(text2, file2, values, options) {
+    if (values.marketing === void 0) return text2;
+    const loc = locateYamlScalar(text2, file2, options.key);
+    const version3 = values.marketing;
+    if (!/^[0-9A-Za-z][0-9A-Za-z.+_-]*$/.test(version3)) {
+      throw new StampError(
+        file2,
+        `can't write "${version3}" as "${options.key}": not a plain version string`
+      );
+    }
+    return applySplices(text2, [{ start: loc.start, end: loc.end, text: version3 }]);
+  }
+};
+
+// src/platforms/pubspec.ts
+var BUILD_NAME = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+function locateVersion(text2, file2) {
+  try {
+    return locateYamlScalar(text2, file2, "version");
+  } catch (error63) {
+    if (error63 instanceof StampError && error63.reason.startsWith('key "version" not found')) {
+      throw new StampError(
+        file2,
+        "no top-level version; add one, e.g. `version: 1.0.0+1` (build name + build number)"
+      );
+    }
+    throw error63;
+  }
+}
+function source(text2, loc, file2) {
+  const raw = text2.slice(loc.start, loc.end);
+  if (loc.quote === '"' && raw.includes("\\")) {
+    throw new StampError(
+      file2,
+      `version (line ${loc.line}) uses escape sequences; write it as a plain value like 1.0.0+1`
+    );
+  }
+  return raw;
+}
+function splitPubspecVersion(value2) {
+  const at = value2.indexOf("+");
+  return at === -1 ? { name: value2, suffix: "" } : { name: value2.slice(0, at), suffix: value2.slice(at) };
+}
+var pubspec = {
+  read(text2, file2) {
+    const loc = locateVersion(text2, file2);
+    const { name, suffix } = splitPubspecVersion(source(text2, loc, file2));
+    const found = [
+      { field: "marketing", key: "version", value: name, line: loc.line }
+    ];
+    if (suffix !== "") {
+      found.push({
+        field: "build",
+        key: "version (+build)",
+        value: suffix.slice(1),
+        line: loc.line
+      });
+    }
+    return found;
+  },
+  write(text2, file2, values, options) {
+    if (values.marketing === void 0 && values.build === void 0) return text2;
+    if (values.marketing !== void 0) {
+      if (!BUILD_NAME.test(values.marketing)) {
+        throw new StampError(
+          file2,
+          `can't write "${values.marketing}" as the version: expected X.Y.Z with an optional prerelease`
+        );
+      }
+      if (options?.platform === "ios") assertIosMarketing(values.marketing, file2);
+    }
+    if (values.build !== void 0) assertBuildNumber(values.build, file2);
+    const loc = locateVersion(text2, file2);
+    const current = splitPubspecVersion(source(text2, loc, file2));
+    const name = values.marketing ?? current.name;
+    const suffix = values.build !== void 0 ? `+${values.build}` : current.suffix;
+    return applySplices(text2, [{ start: loc.start, end: loc.end, text: `${name}${suffix}` }]);
+  }
+};
+
 // src/platforms/regex.ts
 var import_semver4 = __toESM(require_semver2(), 1);
 function mentionsCarriageReturn(pattern) {
@@ -95888,130 +96112,6 @@ function unquote(value2) {
   return value2.length >= 2 && value2.startsWith('"') && value2.endsWith('"') ? value2.slice(1, -1) : value2;
 }
 
-// src/platforms/yaml.ts
-var import_yaml2 = __toESM(require_dist(), 1);
-function parse4(text2, file2) {
-  const docs = (0, import_yaml2.parseAllDocuments)(text2);
-  const list = Array.isArray(docs) ? docs : [docs];
-  for (const doc of list) {
-    const err = doc.errors[0];
-    if (err) {
-      const line = err.linePos?.[0]?.line ?? lineOf(text2, err.pos[0]);
-      throw new StampError(file2, `invalid YAML (line ${line}): ${err.message.split("\n")[0]}`);
-    }
-  }
-  return list;
-}
-function describe4(text2, file2, key, scalar) {
-  const range = scalar.range;
-  const line = range ? lineOf(text2, range[0]) : 1;
-  const where = `"${key}" (line ${line})`;
-  if (!range || range[1] === range[0]) throw new StampError(file2, `${where} has no value`);
-  const type = scalar.type;
-  if (type !== "PLAIN" && type !== "QUOTE_DOUBLE" && type !== "QUOTE_SINGLE") {
-    throw new StampError(
-      file2,
-      `${where} is a block scalar; only plain or quoted values are supported`
-    );
-  }
-  const source = text2.slice(range[0], range[1]);
-  if (/[\r\n]/.test(source))
-    throw new StampError(file2, `${where} spans multiple lines, which isn't supported`);
-  if (type === "PLAIN") {
-    return { start: range[0], end: range[1], quote: null, value: source, line };
-  }
-  const quote = type === "QUOTE_DOUBLE" ? '"' : "'";
-  return { start: range[0] + 1, end: range[1] - 1, quote, value: String(scalar.value), line };
-}
-function walk(doc, path, file2, key) {
-  let node2 = doc.contents;
-  for (const segment of path) {
-    if ((0, import_yaml2.isAlias)(node2)) {
-      throw new StampError(
-        file2,
-        `"${key}" is reached through an alias (*${node2.source}); aliases and anchors can't be stamped`
-      );
-    }
-    if ((0, import_yaml2.isMap)(node2)) {
-      const next = node2.get(segment, true);
-      if (next === void 0) {
-        const merged = node2.items.some((pair) => (0, import_yaml2.isScalar)(pair.key) && pair.key.value === "<<");
-        if (merged) {
-          throw new StampError(
-            file2,
-            `"${key}" isn't set directly: a "<<" merge key is in the way and merge keys can't be stamped`
-          );
-        }
-        return void 0;
-      }
-      node2 = next;
-    } else if ((0, import_yaml2.isSeq)(node2) && /^(0|[1-9]\d*)$/.test(segment)) {
-      node2 = node2.get(Number(segment), true);
-    } else {
-      return void 0;
-    }
-  }
-  return node2;
-}
-function locate6(text2, file2, key) {
-  const path = key.split(".");
-  const hits = [];
-  parse4(text2, file2).forEach((doc, index) => {
-    const node2 = walk(doc, path, file2, key);
-    if (node2 === void 0 || node2 === null) return;
-    if ((0, import_yaml2.isAlias)(node2)) {
-      throw new StampError(
-        file2,
-        `"${key}" is an alias (*${node2.source}); aliases and anchors can't be stamped`
-      );
-    }
-    if (!(0, import_yaml2.isScalar)(node2)) {
-      throw new StampError(file2, `"${key}" is a collection, expected a string value`);
-    }
-    if (node2.anchor) {
-      throw new StampError(
-        file2,
-        `"${key}" is anchored (&${node2.anchor}), so other places may share this value through an alias; anchors can't be stamped`
-      );
-    }
-    hits.push({ doc: index + 1, scalar: node2 });
-  });
-  if (hits.length === 0) throw new StampError(file2, `key "${key}" not found`);
-  if (hits.length > 1) {
-    const docs = hits.map((h) => h.doc).join(", ");
-    throw new StampError(
-      file2,
-      `key "${key}" exists in more than one YAML document (documents ${docs}); can't tell which one to stamp`
-    );
-  }
-  return describe4(text2, file2, key, hits[0].scalar);
-}
-var yamlValue = {
-  read(text2, file2, options) {
-    const loc = locate6(text2, file2, options.key);
-    return [
-      {
-        field: "marketing",
-        key: options.key,
-        value: loc.value,
-        line: loc.line
-      }
-    ];
-  },
-  write(text2, file2, values, options) {
-    if (values.marketing === void 0) return text2;
-    const loc = locate6(text2, file2, options.key);
-    const version3 = values.marketing;
-    if (!/^[0-9A-Za-z][0-9A-Za-z.+_-]*$/.test(version3)) {
-      throw new StampError(
-        file2,
-        `can't write "${version3}" as "${options.key}": not a plain version string`
-      );
-    }
-    return applySplices(text2, [{ start: loc.start, end: loc.end, text: version3 }]);
-  }
-};
-
 // src/platforms/index.ts
 async function isFile(path) {
   try {
@@ -96039,8 +96139,8 @@ function sourceBinding(target, file2) {
     }
     case "pbxproj": {
       if (target.type !== "ios") break;
-      const source = target.source;
-      const targets = source.kind === "xcodeproj" || source.kind === "capacitor" ? source.xcodeTargets : void 0;
+      const source2 = target.source;
+      const targets = source2.kind === "xcodeproj" || source2.kind === "capacitor" ? source2.xcodeTargets : void 0;
       return { ...base, stamper: pbxproj, options: { targets } };
     }
     case "plist":
@@ -96053,6 +96153,9 @@ function sourceBinding(target, file2) {
         stamper: target.type === "ios" ? expoIos : expoAndroid,
         options: void 0
       };
+    case "pubspec":
+      if (target.type !== "android" && target.type !== "ios") break;
+      return { ...base, stamper: pubspec, options: { platform: target.type } };
   }
   throw new Error(`internal: source format ${file2.format} doesn't fit target ${target.name}`);
 }
@@ -96133,6 +96236,20 @@ async function targetBindings(target, root) {
 async function versionFileBindings(config2, root) {
   const file2 = config2.version.file;
   const absolute = resolve4(root, file2);
+  if (versionFileFormat(file2) === "pubspec") {
+    return [
+      {
+        path: file2,
+        absolute,
+        field: "version.file",
+        stamper: pubspec,
+        options: void 0,
+        value: "version",
+        build: true,
+        ciOnly: false
+      }
+    ];
+  }
   const bindings = [
     {
       path: file2,
@@ -96173,11 +96290,11 @@ async function readRootVersion(config2, root) {
       `version.file: can't read ${config2.version.file} (${error63.code ?? error63.message})`
     );
   });
-  const found = jsonValue.read(text2, config2.version.file, { key: "version" });
-  const value2 = found[0]?.value;
+  const found = versionFileFormat(config2.version.file) === "pubspec" ? pubspec.read(text2, config2.version.file, void 0) : jsonValue.read(text2, config2.version.file, { key: "version" });
+  const value2 = found.find((f) => f.field === "marketing")?.value;
   if (!value2) {
     throw new LaunchsetError("no-root-version", `${config2.version.file} has no "version"`, {
-      hint: 'Add a "version" field, e.g. "version": "0.1.0".'
+      hint: rootVersionHint(config2.version.file)
     });
   }
   return value2;
@@ -96242,10 +96359,15 @@ async function stampForBuild(config2, root, plan, targetPlan) {
   if (build2 !== void 0) values.build = build2;
   if (targetPlan.docker) values.imageTag = targetPlan.docker.verifyTag;
   const work = [];
+  const own2 = await targetBindings(target, root);
+  const ownFiles = new Set(own2.filter((b) => b.stamper === pubspec).map((b) => b.absolute));
   for (const binding of await versionFileBindings(config2, root)) {
-    work.push({ binding, values: { marketing: plan.version } });
+    if (ownFiles.has(binding.absolute)) continue;
+    const rootValues = { marketing: plan.version };
+    if (binding.build && build2 !== void 0) rootValues.build = build2;
+    work.push({ binding, values: rootValues });
   }
-  for (const binding of await targetBindings(target, root)) {
+  for (const binding of own2) {
     work.push({ binding, values: valuesFor(binding, values, true) });
   }
   return apply(work);
@@ -96722,6 +96844,16 @@ function shipBuild(plan) {
   const target = plan.targets[plan.matrix[0] ?? ""];
   const build2 = target ? target.buildNumber : plan.buildNumber;
   return build2 === null ? "" : `, build number ${build2}`;
+}
+function withNotes(decision, extra) {
+  if (extra.notices.length === 0 && extra.warnings.length === 0) return decision;
+  const out = {
+    ...decision,
+    notices: [...extra.notices, ...decision.notices],
+    warnings: [...extra.warnings, ...decision.warnings]
+  };
+  out.summary = renderReleaseSummary(out);
+  return out;
 }
 function renderReleaseSummary(decision) {
   const { plan } = decision;
@@ -99020,6 +99152,7 @@ async function changelogInfoFor(changesetPaths, options) {
 }
 
 // src/git/release-commit.ts
+var import_yaml5 = __toESM(require_dist(), 1);
 init_errors();
 var BATCH = 64;
 async function readRootVersion2(git, sha, file2) {
@@ -99027,6 +99160,7 @@ async function readRootVersion2(git, sha, file2) {
   return text2 === void 0 ? void 0 : parseRootVersion(text2, file2, sha);
 }
 function parseRootVersion(text2, file2, sha) {
+  if (versionFileFormat(file2) === "pubspec") return parsePubspecVersion(text2, file2, sha);
   let data;
   try {
     data = JSON.parse(text2.replace(/^\uFEFF/, ""));
@@ -99042,6 +99176,21 @@ function parseRootVersion(text2, file2, sha) {
     if (typeof version3 === "string") return version3;
   }
   return void 0;
+}
+function parsePubspecVersion(text2, file2, sha) {
+  const doc = (0, import_yaml5.parseDocument)(text2.replace(/^\uFEFF/, ""));
+  const error63 = doc.errors[0];
+  if (error63) {
+    throw new LaunchsetError(
+      "invalid-version-file",
+      `Could not parse ${file2} at commit ${sha.slice(0, 12)}: ${error63.message.split("\n")[0]}`,
+      { hint: "The version file must be valid YAML in every commit launchset inspects." }
+    );
+  }
+  if (!(0, import_yaml5.isMap)(doc.contents)) return void 0;
+  const node2 = doc.contents.get("version", true);
+  const value2 = (0, import_yaml5.isScalar)(node2) ? node2.value : void 0;
+  return typeof value2 === "string" ? value2.split("+")[0] : void 0;
 }
 function versionReader(git, file2) {
   const cache3 = /* @__PURE__ */ new Map();
@@ -99802,16 +99951,17 @@ import { resolve as resolve6 } from "node:path";
 
 // src/flow/git-ops.ts
 init_errors();
-function tagPushOptions(context, name) {
+function tagPushOptions(context, name, options = {}) {
   const skipCi = hostProfile(context.host).skipCiPushOption;
   if (!skipCi) return [];
+  if (options.skipCi) return [skipCi];
   const index = indexTags([name], { tags: context.config.tags, targets: context.config.targets });
   const internal = index.partials.size > 0 || index.markerTags.length > 0;
   if (internal || !gitlabSettings(context.config).tagPipelines) return [skipCi];
   return [];
 }
-function tagPushOptionsFor(context, name) {
-  const pushOptions = tagPushOptions(context, name);
+function tagPushOptionsFor(context, name, choice = {}) {
+  const pushOptions = tagPushOptions(context, name, choice);
   return {
     pushOptions,
     onUnsupported: () => context.log.warn(
@@ -99819,7 +99969,7 @@ function tagPushOptionsFor(context, name) {
     )
   };
 }
-async function ensureTag(context, name, sha) {
+async function ensureTag(context, name, sha, choice = {}) {
   const { git } = context;
   const existing = await git.tryRevParse(`refs/tags/${name}`);
   if (existing !== void 0 && existing !== sha) throw tagConflict(name, existing, sha);
@@ -99830,7 +99980,7 @@ async function ensureTag(context, name, sha) {
   }
   let pushed;
   try {
-    const options = tagPushOptionsFor(context, name);
+    const options = tagPushOptionsFor(context, name, choice);
     pushed = existing === void 0 ? await git.createAndPushTag(name, sha, options) : await git.pushTag(name, options);
   } catch (error63) {
     if (error63 instanceof TagCleanupError) {
@@ -100634,7 +100784,7 @@ async function rootVersion(context, sha) {
     throw new LaunchsetError(
       "no-root-version",
       `${context.config.version.file} has no "version" at commit ${sha.slice(0, 7)}`,
-      { hint: 'Add a "version" field, e.g. "version": "0.1.0".' }
+      { hint: rootVersionHint(context.config.version.file) }
     );
   }
   return version3;
@@ -101024,14 +101174,101 @@ ${compared.note}
 // src/flow/preview-sweep.ts
 init_errors();
 
+// src/flow/baseline.ts
+import { readFile as readFile6 } from "node:fs/promises";
+import { basename as basename4 } from "node:path";
+
+// src/core/baseline.ts
+function baselineAction(config2, input2) {
+  const version3 = config2.baseline;
+  if (version3 === void 0 || input2.branch !== config2.baseBranch) return void 0;
+  if (input2.version !== version3 || isReleased(input2.index, version3)) return void 0;
+  const tag2 = releaseTag(config2.tags, version3);
+  const partial2 = input2.index.partials.get(version3);
+  const markers = input2.index.markers.get(version3);
+  if (partial2 !== void 0 || markers !== void 0 && markers.size > 0) {
+    return {
+      kind: "skip",
+      warning: `\`baseline\` is ${version3}, but launchset already shipped part of ${version3} (${partial2 !== void 0 ? `partial tag ${code(partial2)}` : `marker tags for ${[...markers ?? []].map(code).join(", ")}`}), so it doesn't create ${code(tag2)} as a baseline. Remove \`baseline\` from the launchset config.`
+    };
+  }
+  return { kind: "create", version: version3, tag: tag2 };
+}
+function baselineNotice(action, sha, options = {}) {
+  const at = code(sha.slice(0, 7));
+  return options.dryRun ? `\`baseline\` is ${action.version}: the release workflow creates ${code(action.tag)} at ${at}, so ${action.version} counts as released without a build.` : `Created the baseline tag ${code(action.tag)} at ${at} (\`baseline\` in the launchset config): ${action.version} counts as released, nothing was built. You can remove \`baseline\` from the config now.`;
+}
+
+// src/flow/baseline.ts
+init_errors();
+async function applyBaseline(context, state, options = {}) {
+  const action = baselineAction(context.config, {
+    branch: state.branch,
+    version: state.version,
+    index: state.tags.index
+  });
+  if (action === void 0) return { state, notices: [], warnings: [] };
+  if (action.kind === "skip") return { state, notices: [], warnings: [action.warning] };
+  const warnings = [];
+  let dryRun = options.dryRun ?? false;
+  if (!dryRun && !await configCommitted(context, state.headSha)) {
+    dryRun = true;
+    warnings.push(
+      `\`baseline\` is ${action.version}, but the launchset config isn't committed at ${code(state.headSha.slice(0, 7))}, so ${code(action.tag)} isn't created here: a tag on a commit before the migration would start its tag-triggered workflows. Commit the config; the release workflow creates the tag after the merge.`
+    );
+  }
+  if (!dryRun) {
+    try {
+      await ensureTag(context, action.tag, state.headSha, { skipCi: true });
+    } catch (error63) {
+      if (!(error63 instanceof LaunchsetError && error63.code === "tag-conflict") || !options.regather)
+        throw error63;
+      return {
+        state: await options.regather(),
+        notices: [`Another release run created the baseline tag ${code(action.tag)} first.`],
+        warnings: []
+      };
+    }
+  }
+  const refs = (await context.git.tags()).filter((t) => t.name !== action.tag);
+  const reachableReleases = [.../* @__PURE__ */ new Set([...state.reachableReleases, action.version])];
+  return {
+    state: {
+      ...state,
+      tags: snapshotTags([...refs, { name: action.tag, sha: state.headSha }], context.config),
+      reachableReleases,
+      lastReleaseTag: lastReleaseTagOf(context, reachableReleases),
+      commitsSinceRelease: [],
+      botPrs: [],
+      headIsReleaseCommit: false,
+      releaseCommit: state.headSha
+    },
+    notices: [baselineNotice(action, state.headSha, { dryRun })],
+    warnings
+  };
+}
+async function configCommitted(context, sha) {
+  const path = await context.git.toRepoPath(basename4(context.configFile));
+  const [committed, current] = await Promise.all([
+    context.git.showFile(sha, path),
+    readFile6(context.configFile, "utf8")
+  ]);
+  return committed === current;
+}
+
 // src/flow/release.ts
 async function release(context, options = {}) {
-  const state = await gatherReleaseState(context, {
+  const gather2 = (fetch2 = options.fetch) => gatherReleaseState(context, {
     ...options.branch ? { branch: options.branch } : {},
-    ...options.fetch !== void 0 ? { fetch: options.fetch } : {}
+    ...fetch2 !== void 0 ? { fetch: fetch2 } : {}
   });
+  const baseline = await applyBaseline(context, await gather2(), {
+    dryRun: options.dryRun ?? false,
+    regather: () => gather2(true)
+  });
+  const state = baseline.state;
   const event = releaseEventFor(context, options);
-  const decision = planRelease(releaseInputFor(context, state, event));
+  const decision = withNotes(planRelease(releaseInputFor(context, state, event)), baseline);
   const { plan } = decision;
   if (plan.mode === "release-pr") {
     const error63 = invalidChangesetsError(state.invalidChangesets);
@@ -101276,7 +101513,7 @@ init_errors();
 init_http();
 init_redact();
 init_types();
-import { readFile as readFile6 } from "node:fs/promises";
+import { readFile as readFile7 } from "node:fs/promises";
 import { dirname as dirname4, resolve as resolve7 } from "node:path";
 var DEFAULT_NPM_REGISTRY = "https://registry.npmjs.org/";
 var NPM_TOKEN_ENV = ["LAUNCHSET_NPM_TOKEN", "NODE_AUTH_TOKEN"];
@@ -101298,7 +101535,7 @@ function parseNpmrc(text2, env) {
 }
 async function readOptional(file2) {
   try {
-    return await readFile6(file2, "utf8");
+    return await readFile7(file2, "utf8");
   } catch (error63) {
     if (error63.code === "ENOENT") return void 0;
     throw new VerifyError(`Couldn't read ${file2} (${error63.message}).`);
@@ -101418,7 +101655,7 @@ async function verifyNpm(check3, ctx) {
 // src/verify/registry.ts
 init_http();
 init_types();
-import { readFile as readFile7 } from "node:fs/promises";
+import { readFile as readFile8 } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join as join6 } from "node:path";
 var REGISTRY_ENV = {
@@ -101482,7 +101719,7 @@ function dockerConfigPath(env) {
 async function readDockerConfig(file2) {
   let text2;
   try {
-    text2 = await readFile7(file2, "utf8");
+    text2 = await readFile8(file2, "utf8");
   } catch (error63) {
     if (error63.code === "ENOENT") return void 0;
     throw new VerifyError(
