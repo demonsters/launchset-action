@@ -97161,17 +97161,18 @@ function passLine(result, input2) {
 }
 function renderCheckComment(result, input2, addHelp) {
   const PR = forgeWords(input2.host).prName;
+  const icon = result.ok ? "\u{1F680}" : "\u26A0\uFE0F";
   const blocks = [];
   const next = result.bump !== null && result.nextVersion !== null ? `The next release will be **${result.nextVersion}** (${result.bump}).` : result.bump === null ? "Nothing pending releases anything yet." : "";
   if (result.reason === "release-pr") {
     blocks.push(
-      `### \u{1F680} launchset: release ${PR}`,
+      `### ${icon} launchset: release ${PR}`,
       `This is the launchset release ${PR}. Merging it releases every auto target.`
     );
   } else if (result.prChangesets.length > 0) {
     const highest = releaseBump(result.prChangesets);
     blocks.push(
-      `### \u{1F680} launchset: ${plural2(result.prChangesets.length, "changeset")} found`,
+      `### ${icon} launchset: ${plural2(result.prChangesets.length, "changeset")} found`,
       `This ${PR}'s bump: **${highest ?? "none"}**. ${next}`.trim(),
       result.prChangesets.map(
         (c) => c.bump === "none" ? `- \`none\`: no release (${code(c.path)})` : `- \`${c.bump}\`: ${firstLine(c.summary)} (${code(c.path)})`
@@ -97179,12 +97180,12 @@ function renderCheckComment(result, input2, addHelp) {
     );
   } else if (result.reason === "bot") {
     blocks.push(
-      `### \u{1F680} launchset: bot ${PR}`,
+      `### ${icon} launchset: bot ${PR}`,
       `No changeset needed: ${PR}s from ${code(input2.pr.author)} get a generated patch entry under Dependencies in the next release.`
     );
   } else {
     blocks.push(
-      "### \u{1F680} launchset: no changeset",
+      `### ${icon} launchset: no changeset`,
       `This ${PR} has no changeset, so the check fails.`,
       addHelp
     );
